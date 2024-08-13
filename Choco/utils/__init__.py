@@ -1,1 +1,1 @@
-from .gadget import iprint, get_rss_usage, set_print_form
+from .gadget import iprint, set_print_form
