@@ -1,0 +1,13 @@
+qiskit==1.0.2
+qiskit_aer==0.14.0.1
+qiskit-ibm-runtime==0.25.0
+pennylane==0.35.0
+pennylane-qiskit==0.31.0
+numpy==1.26.4
+tqdm
+pandas
+networkx
+matplotlib
+mqt.ddsim
+gurobipy
+ipykernel
