@@ -1,6 +1,7 @@
 from collections import defaultdict
 from typing import Dict, Tuple, Union, List, Set
 from itertools import product
+import uuid
 
 coeff_type = int
 to_lin_constr: bool = True
@@ -15,42 +16,58 @@ def set_to_lin_constr(flag: bool):
     to_lin_constr = flag
 
 class Variable:
-    def __init__(self, vtype='binary', name="unnamed"):
+    # 推荐通过 Model 使用 Variable
+    existing_variable_names_in_class: Set[str] = set()  # 类变量，存储已经存在类空间中的变量名
+    unnamed_index = 1
+    
+    def __init__(self, vtype='binary', name='unnamed', enforce_unique_name_in_class: bool = True):
+        if name == 'unnamed':
+            name = f'unnamed_{Variable.unnamed_index}'
+            Variable.unnamed_index += 1
+        
+        if enforce_unique_name_in_class:
+            if name in Variable.existing_variable_names_in_class:
+                raise ValueError(f"Variable with name '{name}' already exists in class.")
+            
+            Variable.existing_variable_names_in_class.add(name)
         self.vtype = vtype
         self.name = name
         self.x = None
 
-    def to_expression(self):
+    def to_expression(self) -> 'Expression':
         """将 Variable 转为 Expression, 处理加减乘除/生成约束"""
         return Expression({tuple([self]): coeff_type(1)})
 
-    def __neg__(self):
+    def __neg__(self) -> 'Expression':
         return -1 * self.to_expression()
 
-    def __add__(self, other):
+    def __add__(self, other) -> 'Expression':
         return self.to_expression() + other
 
-    def __radd__(self, other):
+    def __radd__(self, other) -> 'Expression':
         return self + other
 
-    def __sub__(self, other):
+    def __sub__(self, other) -> 'Expression':
         return self.to_expression() - other
+    
+    def __rsub__(self, other) -> 'Expression':
+        return other - self.to_expression()
 
-    def __mul__(self, other):
+    def __mul__(self, other) -> 'Expression':
         return self.to_expression() * other
 
-    def __rmul__(self, other):
+    def __rmul__(self, other) -> 'Expression':
         return self * other
 
     # def __truediv__(self, other):
     #     return self.to_expression() / other
-    def __le__(self, other):
+    def __le__(self, other) -> 'Constraint':
         return Constraint(self.to_expression(), '<=', other)
     
-    def __ge__(self, other):
+    def __ge__(self, other) -> 'Constraint':
         return Constraint(self.to_expression(), '>=', other)
 
-    def __eq__(self, other):
+    def __eq__(self, other) -> 'Constraint':
         return Constraint(self.to_expression(), '==', other)
 
     def __hash__(self):
@@ -69,6 +86,32 @@ class Expression:
             constant = self.terms.pop(())
             return constant
         return coeff_type(0)
+    
+    def max_for_lin(self):
+        """得到线性表达式的最大值，用来等式约束转换添加辅助变量"""
+        assert all(len(term) <= 1 for term in self.terms.keys()), "Expression is not linear."
+        
+        max_value = 0
+        for vars, coeff in self.terms.items():
+            if vars:  # 如果不是常数项
+                max_value += max(coeff, 0)
+            else:
+                max_value += coeff  # 常数项直接加到结果中
+        
+        return max_value
+
+    def min_for_lin(self):
+        """得到线性表达式的最小值，用来等式约束转换添加辅助变量"""
+        assert all(len(term) <= 1 for term in self.terms.keys()), "Expression is not linear."
+        
+        min_value = 0
+        for vars, coeff in self.terms.items():
+            if vars:  # 如果不是常数项
+                min_value += min(coeff, 0)
+            else:
+                min_value += coeff  # 常数项直接加到结果中
+        
+        return min_value
     
     def __add__(self, other):
         result = defaultdict(coeff_type, self.terms)
@@ -142,10 +185,13 @@ class Constraint:
             rhs_const = rhs
             rhs_expr = Expression()
 
+        # 提取 expr 中的常数项
+        expr_const = expr.extract_constants()
+
         # 将 rhs 的非常数部分移到左边的表达式中
-        self.expr = expr - rhs_expr
+        self.expr: Expression = expr - rhs_expr
         self.sense = sense
-        self.rhs = rhs_const
+        self.rhs = rhs_const - expr_const
 
     def __repr__(self):
         return f"{self.expr} {self.sense} {self.rhs}"
@@ -157,20 +203,21 @@ class Model:
         self.constraints = []
         self.objective = None   
         self.obj_sense = None
+        self.slack_groups = 1
 
     def addVar(self, vtype='binary', *, name):
         if name in self.existing_var_names:
-            print(f"Variable with name '{name}' already exists.")
+            print(f"Variable with name '{name}' already exists in model.")
             return None
         
         self.existing_var_names.add(name)
-        var = Variable(vtype, name)
+        var = Variable(vtype, name, False)
         self.variables.append(var)
         return var
     
     def addVars(self, *dimensions, vtype='binary', name) -> Dict[Tuple[int, ...], Variable]:
         if name in self.existing_var_names:
-            print(f"Variable with name '{name}' already exists.")
+            print(f"Variable with name '{name}' already exists in model.")
             return None
 
         self.existing_var_names.add(name)
@@ -181,7 +228,7 @@ class Model:
         dimension_ranges = [range(d) for d in dimensions]
         for index_tuple in product(*dimension_ranges):
             var_name = f"{name}_{'_'.join(map(str, index_tuple))}"
-            var = Variable(vtype, var_name)
+            var = Variable(vtype, var_name, False)
             self.variables.append(var)
             if is_single_dim:
                 vars[index_tuple[0]] = var
@@ -194,11 +241,29 @@ class Model:
         self.obj_sense = sense
 
     def addConstr(self, constraint: Constraint):
-        # if constraint.sense == '<=':
-        #     self.addVar()
-        #     constraint.expr =
-        # elif constraint.sense == '>=':
-        #     pass
+        if constraint.sense in ['<=', '>=']:
+            is_greater_equal = constraint.sense == '>='
+            emin = constraint.expr.min_for_lin()
+            emax = constraint.expr.max_for_lin()
+
+            if is_greater_equal:
+                constraint.rhs = max(emin, constraint.rhs)
+                emin = constraint.rhs
+            else:
+                constraint.rhs = min(emax, constraint.rhs)
+                emax = constraint.rhs
+
+            diff = emax - emin
+            slack_vars = self.addVars(diff, name=f'slk_{self.slack_groups}')
+            self.slack_groups += 1
+
+            if is_greater_equal:
+                constraint.expr -= sum(slack_vars.values())
+            else:
+                constraint.expr += sum(slack_vars.values())
+
+            constraint.sense = '=='
+
         self.constraints.append(constraint)
 
     def addConstrs(self, constraints: List[Constraint]):
@@ -222,37 +287,24 @@ class Model:
                 )
 
 if __name__ == '__main__':
-    set_coeff_type(float)
-    # Example of usage
     m = Model()
-
-    # # Create variables
-    # x = m.addVar(vtype='B', name="x")
-    # y = m.addVar(vtype='B', name="y")
-    # z = m.addVar(vtype='B', name="z")
-    # hh = m.addVars(2,2, name='hh')
-    # m.addConstr(sum(hh.values()))
-    # # Set objective function
-    # m.setObjective(x - y  + 2 * z, 'max')
-    # m.addConstrs((hh[i,j] == 1 for i in range(1, 3) for j in range(1, 3)))
-    # # Add constraints
-    # m.addConstr(x - 2 * y + 3 * z <= 4)
-    # m.addConstr(x - y >= 1)
-    # m.addConstr(x - y >= 1)
-    # m.addConstr(x >= 1)
-    # m.addConstr(x + 3*y == 1)
-    num_facilities = 3
-    num_demands = 4
-    x = m.addVars(num_facilities, vtype='binary', name="x")
-    y = m.addVars(num_demands, num_facilities, vtype='binary', name="y")
-
-    # Objective function
+    num_facilities = 1
+    num_demands = 1
+    x = m.addVars(num_facilities, name="x")
+    y = m.addVars(num_demands, num_facilities, name="y")
     m.setObjective(sum(3 * y[i, j] for i in range(num_demands) for j in range(num_facilities)) + sum(4 * x[j] for j in range(num_facilities)), 'min')
 
-    # Constraints
-    m.addConstrs((sum(y[i, j] for j in range(num_facilities)) == 1 for i in range(num_demands)))
-    m.addConstrs((y[i, j] == x[j] for i in range(num_demands) for j in range(num_facilities)))
-    # Solve it!
+    m.addConstrs((x[j] <= 2 for i in range(num_demands) for j in range(num_facilities)))
+    m.addConstrs((-2 <= -x[j] for i in range(num_demands) for j in range(num_facilities)))
+    m.addConstrs((x[j] >= -1 for i in range(num_demands) for j in range(num_facilities)))
+    m.addConstrs((x[j] >= 1 for i in range(num_demands) for j in range(num_facilities)))
+    m.addConstrs((y[i, j] + x[j] <=  2 for i in range(num_demands) for j in range(num_facilities)))
+    m.addConstrs((y[i, j] + x[j] + 10 >=  10 for i in range(num_demands) for j in range(num_facilities)))
+    m.addConstrs((y[i, j] + x[j] + 10 >=  -10 for i in range(num_demands) for j in range(num_facilities)))
+    m.addConstrs((y[i, j] + x[j] + 10 >=  11 for i in range(num_demands) for j in range(num_facilities)))
+    m.addConstrs((y[i, j] + x[j] + 10 >=  13 for i in range(num_demands) for j in range(num_facilities)))
+    m.addConstrs((10 >= 13 - y[i, j] - x[j] for i in range(num_demands) for j in range(num_facilities)))
+
     # m.optimize()
     print(m)
     # print(f"optimal objective value: {m.objVal}")
