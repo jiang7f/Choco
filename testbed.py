@@ -1,18 +1,16 @@
-from itertools import product
-def fun(*abc, c=0, d):
-    print(abc, c)
+from Choco.model.lin_constr_bin_opt import LinearConstrainedBinaryOptimization as Model
+if __name__ == '__main__':
+    m = Model()
+    num_facilities = 1
+    num_demands = 1
+    m.addVar(name='jqf')
+    x = m.addVars(num_facilities, name="x")
+    y = m.addVars(num_demands, num_facilities, name="y")
+    m.setObjective(sum(3 * y[i, j] for i in range(num_demands) for j in range(num_facilities)) + sum(4 * x[j] for j in range(num_facilities)), 'min')
 
-# fun(2, 3)
-def fun2(*dimensions):
-    print(*dimensions)
-    for index in range(*dimensions):
-        print(index)
-
-fun2(2, 3)
-
-for i in product([1,], (2, 3),[4, 5]):
-    print(i)
-
-fun3 = lambda x: x + 3
-
-print(fun3(4))
+    m.addConstrs((x[j] >= 1 for i in range(num_demands) for j in range(num_facilities)))
+    obj = m.generate_obj_function()
+    print(obj([1] * len(m.variables)))
+    print(m.get_best_cost())
+    # m.optimize()
+    print(m)

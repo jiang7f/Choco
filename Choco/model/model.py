@@ -80,7 +80,7 @@ class Expression:
     def __init__(self, terms: Dict[Tuple[Variable, ...], Union[int, float]] = None):
         self.terms = {tuple(sorted(term, key=lambda var: var.name)): coeff for term, coeff in (terms or {}).items()}
     
-    def extract_constants(self):
+    def extract_constant(self):
         """提取常数项，并从表达式中移除"""
         if () in self.terms:
             constant = self.terms.pop(())
@@ -149,7 +149,23 @@ class Expression:
     
     def __neg__(self):
         return -1 * self
+    
+    def __pow__(self, power: int):
+        """处理幂运算，快速幂"""
+        if power < 0:
+            raise ValueError("Negative powers are not supported.")
+        
+        result = Expression({(): 1})  # 初始为常数1
+        base = self
 
+        while power:
+            if power % 2:
+                result *= base
+            base *= base
+            power //= 2
+        
+        return result
+    
     def __le__(self, other):
         return Constraint(self, '<=', other)
     
@@ -179,14 +195,14 @@ class Constraint:
             rhs = rhs.to_expression()
         # 提取 rhs 中的常数项
         if isinstance(rhs, Expression):
-            rhs_const = rhs.extract_constants()
+            rhs_const = rhs.extract_constant()
             rhs_expr = rhs
         else:
             rhs_const = rhs
             rhs_expr = Expression()
 
         # 提取 expr 中的常数项
-        expr_const = expr.extract_constants()
+        expr_const = expr.extract_constant()
 
         # 将 rhs 的非常数部分移到左边的表达式中
         self.expr: Expression = expr - rhs_expr
@@ -198,14 +214,13 @@ class Constraint:
 
 class Model:
     def __init__(self):
-        self.variables = []
+        self.variables: List[Variable] = []
         self.existing_var_names: Set[str] = set()
-        self.constraints = []
+        self.constraints: List[Constraint] = []
         self.objective = None   
         self.obj_sense = None
-        self.slack_groups = 1
 
-    def addVar(self, vtype='binary', *, name):
+    def addVar(self, vtype='binary', *, name) -> Variable:
         if name in self.existing_var_names:
             print(f"Variable with name '{name}' already exists in model.")
             return None
@@ -236,39 +251,20 @@ class Model:
                 vars[index_tuple] = var
         return vars
     
-    def setObjective(self, expression, sense):
+    def setObjective(self, expression: Expression, sense):
         self.objective = expression
         self.obj_sense = sense
 
     def addConstr(self, constraint: Constraint):
-        if constraint.sense in ['<=', '>=']:
-            is_greater_equal = constraint.sense == '>='
-            emin = constraint.expr.min_for_lin()
-            emax = constraint.expr.max_for_lin()
-
-            if is_greater_equal:
-                constraint.rhs = max(emin, constraint.rhs)
-                emin = constraint.rhs
-            else:
-                constraint.rhs = min(emax, constraint.rhs)
-                emax = constraint.rhs
-
-            diff = emax - emin
-            slack_vars = self.addVars(diff, name=f'slk_{self.slack_groups}')
-            self.slack_groups += 1
-
-            if is_greater_equal:
-                constraint.expr -= sum(slack_vars.values())
-            else:
-                constraint.expr += sum(slack_vars.values())
-
-            constraint.sense = '=='
-
         self.constraints.append(constraint)
 
     def addConstrs(self, constraints: List[Constraint]):
         for constr in constraints:
             self.addConstr(constr)
+    
+    def update(self):
+        """将模型的更改同步到模型内部的数据结构"""
+        pass
 
     def optimize(self):
         # Here we just assign some dummy values for the sake of demonstration.
@@ -304,6 +300,7 @@ if __name__ == '__main__':
     m.addConstrs((y[i, j] + x[j] + 10 >=  11 for i in range(num_demands) for j in range(num_facilities)))
     m.addConstrs((y[i, j] + x[j] + 10 >=  13 for i in range(num_demands) for j in range(num_facilities)))
     m.addConstrs((10 >= 13 - y[i, j] - x[j] for i in range(num_demands) for j in range(num_facilities)))
+
 
     # m.optimize()
     print(m)
