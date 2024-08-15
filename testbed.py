@@ -10,6 +10,7 @@ if __name__ == '__main__':
     m.setObjective(sum(3 * y[i, j] for i in range(num_2) for j in range(num_1)) + sum(4 * x[j] for j in range(num_1)), 'min')
 
     m.addConstrs((x[j] >= 1 for i in range(num_2) for j in range(num_1)))
+    m.addConstrs([x[0] * x[0] == 1])
     obj = m.generate_obj_function()
     print(m)
     print(obj([1] * len(m.variables)))

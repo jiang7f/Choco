@@ -26,7 +26,7 @@ class LinearConstrainedBinaryOptimization(Model):
         # self.probs = None
     
     def update(self):
-        """设定内部数据结构为None, 实现调用 @property 时重生成"""
+        """设定内部数据结构为None, 实现调用 @property 时重新生成"""
         self._variables_idx = None
         self._linear_constraints = None
         self._driver_bitstr = None
