@@ -13,28 +13,17 @@ class LinearConstrainedBinaryOptimization(Model):
         self.slack_groups = 1
         self.obj_dir = None
         self.penalty_lambda = 0x7FFF# 正无穷
-        # self.existing_var_names: Set[str] = set()
-        # self.variables = []
-        # # self._constraints 预留为 linear 和 nonlinear 的并集
+
         self._variables_idx = None
         self._driver_bitstr = None
-        self._linear_constraints = None  # yeld by @property 是 for_cyclic 和 for_others 的并集
         self._obj_function = None
+        self._linear_constraints = None  # yeld by @property 是 for_cyclic 和 for_others 的并集
+
         # self._constraints_classify_cyclic_others  = None # cyclic 用于存∑=x
         # self.objective_func_term_list = [[], []] # 暂设目标函数最高次为2, 任意次的子类自行重载, 解释见 statement
-        # self.objective_func = None
-        # self.objective_penalty = None
-        # self.objective_cyclic = None
-        # self.objective_commute = None
-        # self.current_var_idx = 0
-        # self.variable_name_set = set()
-        # self.algorithm_optimization_method = 'commute'
-        # self.penalty_lambda = 0
+
         # self.collapse_state = None
         # self.probs = None
-        # self.cost_dir = 0
-        # self.opt_mtd = 'standard'
-        # pass
     
     def update(self):
         """设定内部数据结构为None, 实现调用 @property 时重生成"""
@@ -202,20 +191,9 @@ class LinearConstrainedBinaryOptimization(Model):
         raise RuntimeError("找不到可行解")
     
     def get_best_cost(self):
-        # 枚举取最优解，子类需 override
-        state_0 = [int(j) for j in list(bin(0)[2:].zfill(len(self.variables)))]
-        best_cost = self.obj_function(state_0)
-        best_solution_list = [state_0]
-        for i in range(1, 1 << len(self.variables)):
-            bitstr = [int(j) for j in list(bin(i)[2:].zfill(len(self.variables)))]
-            record_value = self.obj_function(bitstr)
-            if record_value < best_cost:
-                best_cost = record_value
-                best_solution_list = [bitstr]
-            elif record_value == best_cost:
-                best_solution_list.append(bitstr)
+        best_cost, best_solution_case = self.optimize_with_gurobi()
         iprint(f'best_cost: {best_cost}')
-        iprint(f'best_solution case: {best_solution_list[0]}')
+        iprint(f'best_solution_case: {best_solution_case}')
         return best_cost
 
     # def optimize(self, optimizer_option: OptimizerOption, circuit_option: CircuitOption) -> None: 

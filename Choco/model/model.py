@@ -1,8 +1,7 @@
 from collections import defaultdict
 from typing import Dict, Tuple, Union, List, Set
 from itertools import product
-import uuid
-
+from gurobipy import Model as GurobiModel, GRB, LinExpr
 coeff_type = int
 to_lin_constr: bool = True
 
@@ -112,6 +111,15 @@ class Expression:
                 min_value += coeff  # 常数项直接加到结果中
         
         return min_value
+    
+    def to_gurobi_expr(self, gurobi_vars):
+        expr = LinExpr()
+        for vars_tuple, coeff in self.terms.items():
+            term_expr = coeff
+            for var in vars_tuple:
+                term_expr *= gurobi_vars[var.name]
+            expr += term_expr
+        return expr
     
     def __add__(self, other):
         result = defaultdict(coeff_type, self.terms)
@@ -265,6 +273,48 @@ class Model:
     def update(self):
         """将模型的更改同步到模型内部的数据结构"""
         pass
+    
+    def to_gurobi_model(self, vtype=GRB.BINARY) -> GurobiModel:
+        # 创建一个 Gurobi 模型实例
+        gurobi_model = GurobiModel()
+
+        # 添加变量
+        gurobi_vars = {}
+        for var in self.variables:
+            gurobi_vars[var.name] = gurobi_model.addVar(vtype=vtype, name=var.name)
+        
+        # 添加目标函数
+        obj_expr = 0
+        for vars_tuple, coeff in self.objective.terms.items():
+            term_value = coeff
+            for var in vars_tuple:
+                term_value *= gurobi_vars[var.name]
+            obj_expr += term_value
+        
+        gurobi_model.setObjective(obj_expr, GRB.MINIMIZE if self.obj_sense == 'min' else GRB.MAXIMIZE)
+
+        # 添加约束
+        for constr in self.constraints:
+            if constr.sense == '==':
+                gurobi_model.addConstr(constr.expr.to_gurobi_expr(gurobi_vars) == constr.rhs)
+            elif constr.sense == '<=':
+                gurobi_model.addConstr(constr.expr.to_gurobi_expr(gurobi_vars) <= constr.rhs)
+            elif constr.sense == '>=':
+                gurobi_model.addConstr(constr.expr.to_gurobi_expr(gurobi_vars) >= constr.rhs)
+
+        return gurobi_model
+    
+    def optimize_with_gurobi(self):
+        gurobi_model = self.to_gurobi_model()
+        gurobi_model.setParam('OutputFlag', 0)
+        gurobi_model.optimize()
+
+        if gurobi_model.status == GRB.OPTIMAL:
+            optimal_value = gurobi_model.objVal
+            solution = {v.varName: v.x for v in gurobi_model.getVars()}
+            return optimal_value, solution
+        else:
+            raise Exception("No optimal solution found.")
 
     def optimize(self):
         # Here we just assign some dummy values for the sake of demonstration.

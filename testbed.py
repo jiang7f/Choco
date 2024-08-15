@@ -10,7 +10,9 @@ if __name__ == '__main__':
 
     m.addConstrs((x[j] >= 1 for i in range(num_demands) for j in range(num_facilities)))
     obj = m.generate_obj_function()
-    print(obj([1] * len(m.variables)))
-    print(m.get_best_cost())
-    # m.optimize()
     print(m)
+    print(obj([1] * len(m.variables)))
+
+    print(m.get_best_cost())
+    # print(m.solve_with_gurobi())
+    # m.optimize()
