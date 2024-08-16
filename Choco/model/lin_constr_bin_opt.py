@@ -16,9 +16,10 @@ class LinearConstrainedBinaryOptimization(Model):
 
         self._variables_idx = None
         self._driver_bitstr = None
-        self._obj_function = None
-        self._linear_constraints = None  # yeld by @property 是 for_cyclic 和 for_others 的并集
-
+        self._obj_func = None
+        self._lin_constr_mtx: np.ndarray = None  # yeld by @property 是 for_cyclic 和 for_others 的并集
+        self._obj_dct: Dict[int, List] = None
+        
         # self._constraints_classify_cyclic_others  = None # cyclic 用于存∑=x
         # self.objective_func_term_list = [[], []] # 暂设目标函数最高次为2, 任意次的子类自行重载, 解释见 statement
 
@@ -28,9 +29,10 @@ class LinearConstrainedBinaryOptimization(Model):
     def update(self):
         """设定内部数据结构为None, 实现调用 @property 时重新生成"""
         self._variables_idx = None
-        self._linear_constraints = None
         self._driver_bitstr = None
-        self._obj_function = None
+        self._obj_func = None
+        self._lin_constr_mtx = None
+        self._obj_dct = None
     
     @property
     def variables_idx(self) -> Dict[str, int]:
@@ -45,18 +47,55 @@ class LinearConstrainedBinaryOptimization(Model):
 
         return self._variables_idx
 
+# ----------------------------------------
+
     @property
-    def linear_constraints(self):
+    def lin_constr_mtx(self):
         # 子类自建linear_constraint 再分类到 for_cyclic & for_others
-        if self._linear_constraints is None:
-            # 处理
-            self._linear_constraints = self.constraints
+        if self._lin_constr_mtx is None:
+            vct_len = len(self.variables) + 1
+            lin_constr_lst = []
+            for constr in self.constraints:
+                constr_vct = [0] * vct_len
+                for var_tuple, coeff in constr.expr.terms.items():
+                    if len(var_tuple) != 1:
+                        continue
+                    # 线性约束，只有一个var在tuple中
+                    index = self.var_idx(var_tuple[0])
+                    constr_vct[index] = coeff
+                constr_vct[-1] = constr.rhs
+                lin_constr_lst.append(constr_vct)
+                
+            self._lin_constr_mtx = np.array(lin_constr_lst)
         
-        return self._linear_constraints
+        return self._lin_constr_mtx
+    
+    @property
+    def obj_dct(self):
+        if self._obj_dct is None:
+            obj_tmp_dct: Dict[int, List] = {}
+            for vars_tuple, coeff in self.objective.terms.items():
+                tuple_len = len(vars_tuple)
+                # 常数项无需编码
+                if tuple_len == 0:
+                    continue
+                if tuple_len not in obj_tmp_dct:
+                    obj_tmp_dct[tuple_len] = []
+
+                indexs = []
+                for var in vars_tuple:
+                    index = self.var_idx(var)
+                    indexs.append(index)
+
+                obj_tmp_dct[tuple_len].append((indexs, coeff))
+
+            self._obj_dct = obj_tmp_dct
+        
+        return self._obj_dct
 
     def get_driver_bitstr(self):
         # 如果子类有快速求解约束方程方案，override 是推荐的
-        return find_basic_solution(self.linear_constraints[:,:-1]) if len(self.linear_constraints) > 0 else []
+        return find_basic_solution(self.lin_constr_mtx[:,:-1]) if len(self.lin_constr_mtx) > 0 else []
 
     @property
     def driver_bitstr(self):
@@ -84,11 +123,11 @@ class LinearConstrainedBinaryOptimization(Model):
         return obj_function
     
     @property
-    def obj_function(self) -> callable:
-        if self._obj_function is None:
-            self._obj_function = self.generate_obj_function()
+    def obj_func(self) -> callable:
+        if self._obj_func is None:
+            self._obj_func = self.generate_obj_function()
 
-        return self._obj_function
+        return self._obj_func
     # def set_optimization_direction(self, dir):
 
     def setObjective(self, expression, sense):
@@ -136,6 +175,19 @@ class LinearConstrainedBinaryOptimization(Model):
         self.constraints.append(constraint)
     
 
+    def get_feasible_solution(self):
+        # 如果子类有快速 generate 可行解方案，override 是推荐的
+        for i in range(1 << len(self.variables)):
+            bitstr = [int(j) for j in list(bin(i)[2:].zfill(len(self.variables)))]
+            if all([np.dot(bitstr,constr[:-1]) == constr[-1] for constr in self.lin_constr_mtx]):
+                return bitstr
+        raise RuntimeError("找不到可行解")
+    
+    def get_best_cost(self):
+        best_cost, best_solution_case = self.optimize_with_gurobi()
+        iprint(f'best_cost: {best_cost}')
+        iprint(f'best_solution_case: {best_solution_case}')
+        return best_cost
 
     
     # def add_objective(self, expr_or_func):
@@ -182,19 +234,6 @@ class LinearConstrainedBinaryOptimization(Model):
     # def dctm_driver_bitstr(self):
     #     return find_basic_solution(self.dctm_linear_constraints[:,:-1]) if len(self.dctm_linear_constraints) > 0 else []
 
-    def get_feasible_solution(self):
-        # 如果子类有快速 generate 可行解方案，override 是推荐的
-        for i in range(1 << len(self.variables)):
-            bitstr = [int(j) for j in list(bin(i)[2:].zfill(len(self.variables)))]
-            if all([np.dot(bitstr,constr[:-1]) == constr[-1] for constr in self.linear_constraints]):
-                return bitstr
-        raise RuntimeError("找不到可行解")
-    
-    def get_best_cost(self):
-        best_cost, best_solution_case = self.optimize_with_gurobi()
-        iprint(f'best_cost: {best_cost}')
-        iprint(f'best_solution_case: {best_solution_case}')
-        return best_cost
 
     # def optimize(self, optimizer_option: OptimizerOption, circuit_option: CircuitOption) -> None: 
     #     circuit_option.num_qubits = len(self.variables)
