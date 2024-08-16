@@ -4,6 +4,7 @@ from ..utils import iprint
 from typing import Dict, Tuple, Set, List, Union
 import numpy as np
 from ..utils.linear_system import find_basic_solution
+from ..solvers import Solver
 
 class LinearConstrainedBinaryOptimization(Model):
     def __init__(self):
@@ -46,8 +47,6 @@ class LinearConstrainedBinaryOptimization(Model):
             self._variables_idx = idx_dict
 
         return self._variables_idx
-
-# ----------------------------------------
 
     @property
     def lin_constr_mtx(self):
@@ -189,53 +188,8 @@ class LinearConstrainedBinaryOptimization(Model):
         iprint(f'best_solution_case: {best_solution_case}')
         return best_cost
 
-    
-    # def add_objective(self, expr_or_func):
-
-    # def add_linear_objective(self, coefficients: Iterable):
-    
-    # def add_nonlinear_objective(self, term_list: Iterable, coefficient):
-
-
-    # def add_eq_constraint(self, coefficients: Iterable, variable):
-
-    # def add_constraint(self, expr):
-
-    # def add_linear_constraint(self, coefficients: Iterable):
-
-    
-    # @property
-    # def constraints_classify_cyclic_others(self):
-    #     if self._constraints_classify_cyclic_others is None:
-    #         if self.opt_mtd == 'standard':
-    #             linear_constraints = self.linear_constraints
-    #         elif self.opt_mtd == 'dichotomy':
-    #             linear_constraints = self.dctm_linear_constraints
-    #         self._constraints_classify_cyclic_others = [[] for _ in range(2)]
-    #         seen_indices = set()
-    #         for cstrt in linear_constraints:
-    #             if self.opt_mtd == 'standard':
-    #                 assert len(cstrt) == 1 + len(self.variables)
-    #             # 二分法减少一个比特
-    #             elif self.opt_mtd == 'dichotomy':
-    #                 assert len(cstrt) == 1 + len(self.variables) - self.num_frozen_qubit
-                
-    #             non_zero_indices = np.nonzero(cstrt[:-1])[0]
-    #             if (set(cstrt[:-1]).issubset({0, 1}) or set(cstrt[:-1]).issubset({0, -1})) and not any(index in seen_indices for index in non_zero_indices):
-    #                 assert cstrt[-1] >= 0
-    #                 seen_indices.update(non_zero_indices)
-    #                 self._constraints_classify_cyclic_others[0].append(cstrt)
-    #             else:
-    #                 self._constraints_classify_cyclic_others[1].append(cstrt)
-    #     return self._constraints_classify_cyclic_others
-        
-    
-    # @property
-    # def dctm_driver_bitstr(self):
-    #     return find_basic_solution(self.dctm_linear_constraints[:,:-1]) if len(self.dctm_linear_constraints) > 0 else []
-
-
-    # def optimize(self, optimizer_option: OptimizerOption, circuit_option: CircuitOption) -> None: 
+    def optimize(self, solver: Solver) -> None: 
+        pass
     #     circuit_option.num_qubits = len(self.variables)
     #     circuit_option.algorithm_optimization_method = self.algorithm_optimization_method
     #     circuit_option.penalty_lambda = self.penalty_lambda
@@ -294,6 +248,10 @@ class LinearConstrainedBinaryOptimization(Model):
     #     ARG = abs((mean_cost - best_cost) / best_cost)
     #     iprint(f'ARG: {ARG}')
     #     return ARG, in_constraints_probs, best_solution_probs, iteration_count
+
+    # @property
+    # def dctm_driver_bitstr(self):
+    #     return find_basic_solution(self.dctm_linear_constraints[:,:-1]) if len(self.dctm_linear_constraints) > 0 else []
 
     # def dichotomy_optimize(self, optimizer_option: OptimizerOption, circuit_option: CircuitOption, num_frozen_qubit: int = 1) -> None: 
     #     self.opt_mtd = 'dichotomy'

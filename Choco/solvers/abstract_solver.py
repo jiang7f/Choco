@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from ..option import CircuitOption, OptimizerOption
+from .option import CircuitOption, OptimizerOption
 class Solver(ABC):
     def __init__(self, circuit_option: CircuitOption, optimizer_option: OptimizerOption):
         self.circuit_option = circuit_option
