@@ -15,7 +15,7 @@ class CircuitOption:
     use_IBM_service_mode: str = None
     use_free_IBM_service: bool = True
     use_fake_IBM_service: bool = False
-    cloud_manager: CloudManager = None
+    # cloud_manager: CloudManager = None
     # 
     # log_depth: bool = False
     num_qubits: int = 0
