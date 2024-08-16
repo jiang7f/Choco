@@ -1,5 +1,5 @@
 from ..abstract_solver import Solver
-from ..option import CircuitOption, OptimizerOption
+from ..options import CircuitOption, OptimizerOption
 
 class QcoSolver(Solver):
     def __init__(self, circuit_option: CircuitOption, optimizer_option: OptimizerOption):

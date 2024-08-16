@@ -5,7 +5,7 @@ from typing import Dict, Tuple, Set, List, Union
 import numpy as np
 from ..utils.linear_system import find_basic_solution
 from ..solvers import Solver
-from ..solvers.option import CircuitOption, OptimizerOption
+from ..solvers.options import CircuitOption, OptimizerOption
 
 class LinearConstrainedBinaryOptimization(Model):
     def __init__(self):
@@ -192,9 +192,11 @@ class LinearConstrainedBinaryOptimization(Model):
     def optimize(self, solver: Solver) -> None: 
         solver.model_load(self)
         # solver.solve()
+        collapse_state, probs, iteration_count = solver.optimize()
+        ana
         pass
-    #     circuit_option.num_qubits = len(self.variables)
     #     circuit_option.algorithm_optimization_method = self.algorithm_optimization_method
+    # ----------------------------
     #     circuit_option.penalty_lambda = self.penalty_lambda
     #     circuit_option.feasiable_state = self.get_feasible_solution()
     #     circuit_option.objective_func_term_list = self.objective_func_term_list

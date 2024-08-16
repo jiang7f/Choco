@@ -3,7 +3,16 @@ from quBLP.utils.gadget import get_main_file_info, create_directory_if_not_exist
 import numpy as np
 # from pennylane import numpy as np
 from tqdm import tqdm
-from ...models import OptimizerOption
+# from ...models import OptimizerOption
+
+from .abstract_optimizer import Optimizer
+class Adam(Optimizer):
+    def __init__():
+        pass
+
+
+
+
 def gradient_by_param_shift_pauli(params, cost_function):
     num_params = len(params)
     gradients = np.zeros(num_params)

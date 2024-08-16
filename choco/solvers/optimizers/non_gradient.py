@@ -1,9 +1,17 @@
 from quBLP.utils.gadget import iprint, read_last_row, get_main_file_info, create_directory_if_not_exists
 from scipy.optimize import minimize
 import numpy as np
-from ...models import OptimizerOption
+# from ...models import OptimizerOption
 import csv
 import os
+
+
+from .abstract_optimizer import Optimizer
+class Cobyla(Optimizer):
+    def __init__():
+        pass
+
+
 
 def train_non_gradient(optimizer_option: OptimizerOption):
     if optimizer_option.use_local_params:
