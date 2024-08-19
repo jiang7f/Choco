@@ -5,7 +5,9 @@ from typing import Dict, Tuple, Set, List, Union
 import numpy as np
 from ..utils.linear_system import find_basic_solution
 from ..solvers import Solver
+from ..solvers.data_analyzer import DataAnalyzer
 from ..solvers.options import CircuitOption, OptimizerOption
+from ..utils.errors import QuickFeedbackException
 
 class LinearConstrainedBinaryOptimization(Model):
     def __init__(self):
@@ -15,6 +17,8 @@ class LinearConstrainedBinaryOptimization(Model):
         self.slack_groups = 1
         self.obj_dir = None
         self.penalty_lambda = 0x7FFF# 正无穷
+        self.best_cost = self.get_best_cost()
+        
 
         self._variables_idx = None
         self._driver_bitstr = None
@@ -22,6 +26,11 @@ class LinearConstrainedBinaryOptimization(Model):
         self._lin_constr_mtx: np.ndarray = None  # yeld by @property 是 for_cyclic 和 for_others 的并集
         self._obj_dct: Dict[int, List] = None
         
+
+        self.collapse_state_lst = []
+        self.probs_lst = []
+        self.iteration_count_lst = []
+        self.evaluation_lst = []
         # self._constraints_classify_cyclic_others  = None # cyclic 用于存∑=x
         # self.objective_func_term_list = [[], []] # 暂设目标函数最高次为2, 任意次的子类自行重载, 解释见 statement
 
@@ -189,21 +198,36 @@ class LinearConstrainedBinaryOptimization(Model):
         iprint(f'best_solution_case: {best_solution_case}')
         return best_cost
 
+    def analyze(self):
+        data_analyzer = DataAnalyzer(
+            self.best_cost,
+            self.collapse_state_lst, 
+            self.probs_lst, 
+            self.obj_dir, 
+            self.obj_func, 
+            self.lin_constr_mtx
+        )
+        data_metrics_lst = data_analyzer.summary()
+        # 把 iteration_count 加到每一行 指标 结尾，构成完整评估
+        self.evaluation_lst = [data_metrics + [iter_count] for data_metrics in data_metrics_lst for iter_count in self.iteration_count_lst]
+        return self.evaluation_lst
+
+
     def optimize(self, solver: Solver) -> None: 
         solver.model_load(self)
-        # solver.solve()
-        collapse_state, probs, iteration_count = solver.optimize()
-        ana
-        pass
+        collapse_state, probs, iteration_count = solver.solve()
+        
+        self.collapse_state_lst.append(collapse_state)
+        self.probs_lst.append(probs)
+        self.iteration_count_lst.append(iteration_count)
+
+
+        
+
+        # collapse_state_str = [''.join([str(x) for x in state]) for state in collapse_state]
+        # iprint(dict(zip(collapse_state_str, probs)))
+
     #     circuit_option.algorithm_optimization_method = self.algorithm_optimization_method
-    # ----------------------------
-    #     circuit_option.penalty_lambda = self.penalty_lambda
-    #     circuit_option.feasiable_state = self.get_feasible_solution()
-    #     circuit_option.objective_func_term_list = self.objective_func_term_list
-    #     circuit_option.linear_constraints = self.linear_constraints
-    #     circuit_option.constraints_for_cyclic = self.constraints_classify_cyclic_others[0]
-    #     circuit_option.constraints_for_others = self.constraints_classify_cyclic_others[1]
-    #     circuit_option.Hd_bits_list  = self.driver_bitstr
 
     #     iprint(f'fsb_state: {circuit_option.feasiable_state}') #-
     #     iprint(f'driver_bit_stirng:\n {self.driver_bitstr}') #-
@@ -215,44 +239,13 @@ class LinearConstrainedBinaryOptimization(Model):
     #     }
     #     if self.algorithm_optimization_method in objective_func_map:
     #         circuit_option.objective_func = objective_func_map.get(self.algorithm_optimization_method)
-
     #     try:
     #         collapse_state, probs, iteration_count = solve(optimizer_option, circuit_option)
     #     except QuickFeedbackException as qfe:
     #         return qfe.data
-    #     self.collapse_state=collapse_state
-    #     self.probs=probs
-    #     # collapse_state_str = [''.join([str(x) for x in state]) for state in collapse_state]
-    #     # iprint(dict(zip(collapse_state_str, probs)))
+    # ----------------------------
 
 
-    #     # 找到最优解和最优解的cost / by groubi
-    #     best_cost = self.get_best_cost()
-    #     iprint(f'best_cost: {best_cost}')
-    #     mean_cost = 0
-    #     best_solution_probs = 0
-    #     in_constraints_probs = 0
-    #     for cs, pr in zip(self.collapse_state, self.probs):
-    #         pcost = self.cost_dir * self.objective_penalty(cs)
-    #         if pr >= 1e-3:
-    #             iprint(f'{cs}: {pcost} - {pr}')
-    #         if all([np.dot(cs,constr[:-1]) == constr[-1] for constr in self.linear_constraints]):
-    #             in_constraints_probs += pr
-    #             if pcost == best_cost:
-    #                 best_solution_probs += pr
-    #         mean_cost += pcost * pr
-    #     best_solution_probs *= 100
-    #     in_constraints_probs *= 100
-    #     maxprobidex = np.argmax(probs)
-    #     max_prob_solution = collapse_state[maxprobidex]
-    #     cost = self.cost_dir * circuit_option.objective_func(max_prob_solution)
-    #     iprint(f"max_prob_solution: {max_prob_solution}, cost: {cost}, max_prob: {probs[maxprobidex]:.2%}") #-
-    #     iprint(f'best_solution_probs: {best_solution_probs}')
-    #     iprint(f"mean_cost: {mean_cost}")
-    #     iprint(f'in_constraint_probs: {in_constraints_probs}')
-    #     ARG = abs((mean_cost - best_cost) / best_cost)
-    #     iprint(f'ARG: {ARG}')
-    #     return ARG, in_constraints_probs, best_solution_probs, iteration_count
 
     # @property
     # def dctm_driver_bitstr(self):

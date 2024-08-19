@@ -3,11 +3,19 @@ from quBLP.utils.gadget import get_main_file_info, create_directory_if_not_exist
 import numpy as np
 # from pennylane import numpy as np
 from tqdm import tqdm
-# from ...models import OptimizerOption
+from ...solvers.options import OptimizerOption
 
 from .abstract_optimizer import Optimizer
 class Adam(Optimizer):
-    def __init__():
+    def __init__(self, optimizer_option: OptimizerOption):
+        super().__init__(optimizer_option)
+        
+        optimizer_option.circuit_cost_function
+        optimizer_option.max_iter
+        optimizer_option.learning_rate
+        optimizer_option.beta1
+        optimizer_option.beta2
+        optimizer_option.opt_id
         pass
 
 
@@ -96,4 +104,4 @@ def adam_optimizer(params, cost_function, max_iter, learning_rate, beta1, beta2,
 def train_gradient(optimizer_option: OptimizerOption):
     # , requires_grad=False
     params = 2*np.pi*np.random.uniform(0, 1, optimizer_option.num_params)
-    return adam_optimizer(params, optimizer_option.circuit_cost_function, optimizer_option.max_iter, optimizer_option.learning_rate, optimizer_option.beta1, optimizer_option.beta2, opt_id=optimizer_option.opt_id)
+    return adam_optimizer()
