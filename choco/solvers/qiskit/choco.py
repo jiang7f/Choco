@@ -1,3 +1,4 @@
+from choco.solvers.options import CircuitOption
 from ..abstract_solver import Solver
 from ..optimizers import Optimizer
 from .circuit import QiskitCircuit
@@ -5,8 +6,8 @@ from ..options import ChocoCircuitOption, OptimizerOption
 from qiskit import QuantumCircuit
 from qiskit.circuit import Parameter
 import numpy as np
+from .coordinator import Coordinator
 from .circuit.circuit_components import obj_compnt, commute_compnt
-from mqt import ddsim
 
 
 class ChocoCircuit(QiskitCircuit[ChocoCircuitOption]):
@@ -15,14 +16,11 @@ class ChocoCircuit(QiskitCircuit[ChocoCircuitOption]):
         self.inference_circuit = self.create_circuit()
 
     def inference(self, params):
-        counts = {}
         final_qc = self.inference_circuit.assign_parameters(params)
-        job = self.circuit_option.backend.run(final_qc, shots=self.circuit_option.shots)
-        counts = job.result().get_counts(final_qc)
+        counts = self.circuit_option.coordinator.get_counts(final_qc)
 
         collapse_state, probs = self.process_counts(counts)
         return collapse_state, probs
-
 
     def create_circuit(self):
         mcx_mode = self.circuit_option.mcx_mode
@@ -44,22 +42,33 @@ class ChocoCircuit(QiskitCircuit[ChocoCircuitOption]):
 
         for layer in range(num_layers):
             obj_compnt(qc, Ho_params[layer], self.circuit_option.obj_dct)
-            commute_compnt(qc, Hd_params[layer], self.circuit_option.Hd_bitstr_list, anc_idx, mcx_mode)
+            commute_compnt(
+                qc,
+                Hd_params[layer],
+                self.circuit_option.Hd_bitstr_list,
+                anc_idx,
+                mcx_mode,
+            )
 
         qc.measure(range(num_qubits), range(num_qubits)[::-1])
-        transpiled_qc = self.circuit_option.pass_manager.run(qc)
+        transpiled_qc = self.circuit_option.coordinator.pass_manager.run(qc)
         return transpiled_qc
+
 
 class ChocoSolver(Solver):
     def __init__(
         self,
-        num_layers,
-        backend,
-        mcx_mode,
+        num_layers: int,
+        coordinator: Coordinator,
+        mcx_mode: str,
         optimizer: Optimizer,
     ):
-        self.circuit_option = ChocoCircuitOption(
+        self.mcx_mode = mcx_mode
+        super().__init__(num_layers, coordinator, optimizer)
+
+    def create_circuit_option(self, num_layers: int, coordinator: Coordinator) -> CircuitOption:
+        return ChocoCircuitOption(
             num_layers=num_layers,
-            backend=backend,
-            mcx_mode=mcx_mode,
+            coordinator=coordinator,
+            mcx_mode=self.mcx_mode,
         )

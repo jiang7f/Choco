@@ -1,14 +1,15 @@
 from dataclasses import dataclass, field
 from typing import List, Callable, Tuple, Dict, Union
-from qiskit.providers import Backend, BackendV2
-from qiskit.transpiler import PassManager
+from ..qiskit.coordinator import Coordinator
+# from qiskit.providers import Backend, BackendV2
+# from qiskit.transpiler import PassManager
+
 
 @dataclass(kw_only=True)
 class CircuitOption:
-    num_layers: int
-    backend: Union[Backend, BackendV2]
-    pass_manager: PassManager
-
+    num_layers: int = None
+    coordinator: Coordinator = None
+    
     num_qubits: int = None
     penalty_lambda: float = None
     feasible_state: List[int] = None # field(default_factory=list)
@@ -41,4 +42,5 @@ class CircuitOption:
 
 @dataclass(kw_only=True)
 class ChocoCircuitOption(CircuitOption):
-    mcx_mode: str  # 'constant' for 2 additional ancillas with linear depth, 'linear' for n - 1 additional ancillas with logarithmic depth
+    mcx_mode: str = None # 'constant' for 2 additional ancillas with linear depth, 'linear' for n - 1 additional ancillas with logarithmic depth
+

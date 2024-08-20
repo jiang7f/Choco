@@ -1,7 +1,7 @@
 from quBLP.utils.gadget import iprint, read_last_row, get_main_file_info, create_directory_if_not_exists
 from scipy.optimize import minimize
 import numpy as np
-# from ...models import OptimizerOption
+from ..options import OptimizerOption
 import csv
 import os
 
