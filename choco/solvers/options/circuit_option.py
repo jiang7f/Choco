@@ -1,17 +1,22 @@
 from dataclasses import dataclass, field
-from typing import List, Callable, Tuple, Dict
+from typing import List, Callable, Tuple, Dict, Union
+from qiskit.providers import Backend, BackendV2
+from qiskit.transpiler import PassManager
 
-@dataclass
+@dataclass(kw_only=True)
 class CircuitOption:
     num_layers: int
+    backend: Union[Backend, BackendV2]
+    pass_manager: PassManager
 
     num_qubits: int = None
     penalty_lambda: float = None
-    feasiable_state: List[int] = None # field(default_factory=list)
+    feasible_state: List[int] = None # field(default_factory=list)
     obj_dct: Dict[int, List] = None # field(default_factory=dict)
     lin_constr_mtx: List[List[float]] = field(default_factory=list)
-    Hd_bits_list: List[List[int]] = field(default_factory=list)
+    Hd_bitstr_list: List[List[int]] = field(default_factory=list)
     obj_func: Callable = None
+    shots: int = 1024
     
     pass
     # need_draw: bool = False
@@ -21,7 +26,6 @@ class CircuitOption:
     # mcx_mode: str = 'constant'  # 'constant' for 2 additional ancillas with linear depth, 'linear' for n-1 additional ancillas with logarithmic depth
     # backend: str = 'FakeAlmadenV2' #'FakeQuebec' # 'AerSimulator'\
     # feedback: List = field(default_factory=list)
-    # shots: int = 1024
     # use_IBM_service_mode: str = None
     # use_free_IBM_service: bool = True
     # use_fake_IBM_service: bool = False
@@ -34,3 +38,7 @@ class CircuitOption:
     # objective_func_term_list: List[List[Tuple[List[int], float]]] = field(default_factory=list)
     # constraints_for_cyclic: List[List[float]] = field(default_factory=list)
     # constraints_for_others: List[List[float]] = field(default_factory=list)
+
+@dataclass(kw_only=True)
+class ChocoCircuitOption(CircuitOption):
+    mcx_mode: str  # 'constant' for 2 additional ancillas with linear depth, 'linear' for n - 1 additional ancillas with logarithmic depth

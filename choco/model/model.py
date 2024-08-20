@@ -1,3 +1,4 @@
+from __future__ import annotations
 from collections import defaultdict
 from typing import Dict, Tuple, Union, List, Set
 from itertools import product
@@ -33,40 +34,40 @@ class Variable:
         self.name = name
         self.x = None
 
-    def to_expression(self) -> 'Expression':
+    def to_expression(self) -> Expression:
         """将 Variable 转为 Expression, 处理加减乘除/生成约束"""
         return Expression({tuple([self]): coeff_type(1)})
 
-    def __neg__(self) -> 'Expression':
+    def __neg__(self) -> Expression:
         return -1 * self.to_expression()
 
-    def __add__(self, other) -> 'Expression':
+    def __add__(self, other) -> Expression:
         return self.to_expression() + other
 
-    def __radd__(self, other) -> 'Expression':
+    def __radd__(self, other) -> Expression:
         return self + other
 
-    def __sub__(self, other) -> 'Expression':
+    def __sub__(self, other) -> Expression:
         return self.to_expression() - other
     
-    def __rsub__(self, other) -> 'Expression':
+    def __rsub__(self, other) -> Expression:
         return other - self.to_expression()
 
-    def __mul__(self, other) -> 'Expression':
+    def __mul__(self, other) -> Expression:
         return self.to_expression() * other
 
-    def __rmul__(self, other) -> 'Expression':
+    def __rmul__(self, other) -> Expression:
         return self * other
 
     # def __truediv__(self, other):
     #     return self.to_expression() / other
-    def __le__(self, other) -> 'Constraint':
+    def __le__(self, other) -> Constraint:
         return Constraint(self.to_expression(), '<=', other)
     
-    def __ge__(self, other) -> 'Constraint':
+    def __ge__(self, other) -> Constraint:
         return Constraint(self.to_expression(), '>=', other)
 
-    def __eq__(self, other) -> 'Constraint':
+    def __eq__(self, other) -> Constraint:
         return Constraint(self.to_expression(), '==', other)
 
     def __hash__(self):

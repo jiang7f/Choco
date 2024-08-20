@@ -229,7 +229,7 @@ class LinearConstrainedBinaryOptimization(Model):
 
     #     circuit_option.algorithm_optimization_method = self.algorithm_optimization_method
 
-    #     iprint(f'fsb_state: {circuit_option.feasiable_state}') #-
+    #     iprint(f'fsb_state: {circuit_option.feasible_state}') #-
     #     iprint(f'driver_bit_stirng:\n {self.driver_bitstr}') #-
     #     objective_func_map = {
     #         'penalty': self.objective_penalty,
@@ -318,8 +318,8 @@ class LinearConstrainedBinaryOptimization(Model):
     #         dctm_feasible_solution = find_feasible_solution_with_gurobi(self.dctm_linear_constraints)
     #         if dctm_feasible_solution is None:
     #             continue
-    #         # circuit_option.feasiable_state = np.delete(self.get_feasible_solution(), self.frozen_idx, axis=0)
-    #         circuit_option.feasiable_state = dctm_feasible_solution
+    #         # circuit_option.feasible_state = np.delete(self.get_feasible_solution(), self.frozen_idx, axis=0)
+    #         circuit_option.feasible_state = dctm_feasible_solution
 
     #         circuit_option.num_qubits = len(self.variables) - len(self.frozen_idx_list)
     #         circuit_option.algorithm_optimization_method = self.algorithm_optimization_method
@@ -327,7 +327,7 @@ class LinearConstrainedBinaryOptimization(Model):
     #         #+++ 这样只冻结了一种形态, 另一种形态待补
     #         iprint(f"frzoen_idx_list{self.frozen_idx_list}")
     #         iprint(f"frzoen_state_list{self.frozen_state_list}")
-    #         iprint("feasible:", circuit_option.feasiable_state)
+    #         iprint("feasible:", circuit_option.feasible_state)
     #         # 处理剔除 frozen_qubit 后的目标函数    
     #         def process_objective_term_list(objective_iterm_list, frozen_idx_list, frozen_state_list):
     #             process_list = []
@@ -377,10 +377,10 @@ class LinearConstrainedBinaryOptimization(Model):
     #         circuit_option.objective_func = dctm_objective_func_map(self.algorithm_optimization_method)
             
     #         if len(circuit_option.Hd_bits_list) == 0:
-    #             cost = self.cost_dir * circuit_option.objective_func(circuit_option.feasiable_state)
+    #             cost = self.cost_dir * circuit_option.objective_func(circuit_option.feasible_state)
     #             ARG = abs((cost - best_cost) / best_cost)
     #             best_solution_probs = 100 if cost == best_cost else 0
-    #             in_constraints_probs = 100 if all([np.dot(circuit_option.feasiable_state, constr[:-1]) == constr[-1] for constr in self.dctm_linear_constraints]) else 0
+    #             in_constraints_probs = 100 if all([np.dot(circuit_option.feasible_state, constr[:-1]) == constr[-1] for constr in self.dctm_linear_constraints]) else 0
     #             ARG_list.append(ARG)
     #             best_solution_probs_list.append(best_solution_probs)
     #             in_constraints_probs_list.append(100)
