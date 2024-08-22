@@ -4,8 +4,8 @@ from typing import List, Callable, Tuple
 @dataclass(kw_only=True)
 class OptimizerOption:
     num_params: int = None
-    
-    pass
+    cost_func: Callable = None
+
     # params_optimization_method: str = 'COBYLA'
     # max_iter: int = 30
     # learning_rate: float = 0.1
@@ -15,3 +15,7 @@ class OptimizerOption:
     # use_local_params: bool = False
     # #
     # circuit_cost_function: Callable = None
+
+@dataclass(kw_only=True)
+class CobylaOptimizerOption(OptimizerOption):
+    max_iter: int = 50

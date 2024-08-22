@@ -5,17 +5,18 @@ from qiskit.providers import Backend, BackendV2
 from qiskit.transpiler import PassManager
 
 
-class Coordinator(ABC):
+class Provider(ABC):
     def __init__(self):
-        self.backend = None
-        self.pass_manager = None
+        self.backend: Union[Backend, BackendV2] = None
+        self.pass_manager: PassManager = None
 
     @abstractmethod
-    def get_counts(self, qc: QuantumCircuit) -> Dict:
+    def get_counts(self, qc: QuantumCircuit, shots: int) -> Dict:
         pass
 
 
-class CustomCoordinator(Coordinator):
+class CustomProvider(Provider):
+    '''没有预设的Provider 可自定义传入三参'''
     def __init__(
         self,
         backend: Union[Backend, BackendV2],

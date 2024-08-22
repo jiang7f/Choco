@@ -1,1 +1,1 @@
-from build_circuit import QiskitCircuit
+from .build_circuit import QiskitCircuit

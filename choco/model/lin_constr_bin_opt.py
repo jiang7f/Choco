@@ -4,9 +4,9 @@ from ..utils import iprint
 from typing import Dict, Tuple, Set, List, Union
 import numpy as np
 from ..utils.linear_system import find_basic_solution
-from ..solvers import Solver
-from ..solvers.data_analyzer import DataAnalyzer
-from ..solvers.options import CircuitOption, OptimizerOption
+# from ..solvers import Solver
+# from ..solvers.data_analyzer import DataAnalyzer
+from ..solvers.options import CircuitOption, OptimizerOption, ModelOption
 from ..utils.errors import QuickFeedbackException
 
 class LinearConstrainedBinaryOptimization(Model):
@@ -17,7 +17,6 @@ class LinearConstrainedBinaryOptimization(Model):
         self.slack_groups = 1
         self.obj_dir = None
         self.penalty_lambda = 0x7FFF# 正无穷
-        self.best_cost = self.get_best_cost()
         
 
         self._variables_idx = None
@@ -25,12 +24,9 @@ class LinearConstrainedBinaryOptimization(Model):
         self._obj_func = None
         self._lin_constr_mtx: np.ndarray = None  # yeld by @property 是 for_cyclic 和 for_others 的并集
         self._obj_dct: Dict[int, List] = None
-        
+        self._best_cost = None
 
-        self.collapse_state_lst = []
-        self.probs_lst = []
-        self.iteration_count_lst = []
-        self.evaluation_lst = []
+
         # self._constraints_classify_cyclic_others  = None # cyclic 用于存∑=x
         # self.objective_func_term_list = [[], []] # 暂设目标函数最高次为2, 任意次的子类自行重载, 解释见 statement
 
@@ -44,6 +40,7 @@ class LinearConstrainedBinaryOptimization(Model):
         self._obj_func = None
         self._lin_constr_mtx = None
         self._obj_dct = None
+        self._best_cost = None
     
     @property
     def variables_idx(self) -> Dict[str, int]:
@@ -157,7 +154,7 @@ class LinearConstrainedBinaryOptimization(Model):
             raise ValueError(f"Variable {variable} does not exist in the model.")
 
     def addConstr(self, constraint: Constraint):
-        """为不等式约束添加松弛变量，转换为等式约束"""
+        """自动为不等式约束添加松弛变量，转换为等式约束"""
         if constraint.sense in ['<=', '>=']:
             is_greater_equal = constraint.sense == '>='
             emin = constraint.expr.min_for_lin()
@@ -192,46 +189,33 @@ class LinearConstrainedBinaryOptimization(Model):
                 return bitstr
         raise RuntimeError("找不到可行解")
     
-    def get_best_cost(self):
-        best_cost, best_solution_case = self.optimize_with_gurobi()
-        iprint(f'best_cost: {best_cost}')
-        iprint(f'best_solution_case: {best_solution_case}')
-        return best_cost
-
-    def analyze(self):
-        data_analyzer = DataAnalyzer(
-            self.best_cost,
-            self.collapse_state_lst, 
-            self.probs_lst, 
-            self.obj_dir, 
-            self.obj_func, 
-            self.lin_constr_mtx
+    @property
+    def best_cost(self):
+        if self._best_cost is None:
+            best_cost, best_solution_case = self.optimize_with_gurobi()
+            iprint(f'best_cost: {best_cost}')
+            iprint(f'best_solution_case: {best_solution_case}')
+            self._best_cost = best_cost
+        return self._best_cost
+    
+    def to_model_option(self) -> ModelOption:
+        model_option = ModelOption(
+            num_qubits = len(self.variables),
+            penalty_lambda = self.penalty_lambda,
+            feasible_state = self.get_feasible_solution(),
+            obj_dct = self.obj_dct,
+            lin_constr_mtx = self.lin_constr_mtx,
+            Hd_bitstr_list = self.driver_bitstr,
+            obj_func = self.obj_func,
+            obj_dir=self.obj_dct,
+            best_cost=self.best_cost
         )
-        data_metrics_lst = data_analyzer.summary()
-        # 把 iteration_count 加到每一行 指标 结尾，构成完整评估
-        self.evaluation_lst = [data_metrics + [iter_count] for data_metrics in data_metrics_lst for iter_count in self.iteration_count_lst]
-        return self.evaluation_lst
-
-
-    def optimize(self, solver: Solver) -> None: 
-        self.solver_load(solver)
-        collapse_state, probs, iteration_count = solver.solve()
         
-        self.collapse_state_lst.append(collapse_state)
-        self.probs_lst.append(probs)
-        self.iteration_count_lst.append(iteration_count)
+        return model_option
 
-    def solver_load(self, solver: Solver):
-        circuit_option = solver.circuit_option
-        circuit_option.num_qubits = len(self.variables)
-        circuit_option.penalty_lambda = self.penalty_lambda
-        circuit_option.feasible_state = self.get_feasible_solution()
-        circuit_option.obj_dct = self.obj_dct
-        circuit_option.lin_constr_mtx = self.lin_constr_mtx
-        circuit_option.Hd_bitstr_list = self.driver_bitstr
-        circuit_option.obj_func = self.obj_func
-        iprint(f"fsb_state: {circuit_option.feasible_state}")  # -
-        iprint(f"driver_bit_stirng:\n {circuit_option.Hd_bitstr_list}")  # -
+    def optimize(self):
+        ''''''
+        return self.optimize_with_gurobi()
         
 
         # collapse_state_str = [''.join([str(x) for x in state]) for state in collapse_state]

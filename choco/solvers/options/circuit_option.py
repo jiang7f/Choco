@@ -1,25 +1,29 @@
 from dataclasses import dataclass, field
 from typing import List, Callable, Tuple, Dict, Union
-from ..qiskit.coordinator import Coordinator
+from .model_option import ModelOption
+from ..qiskit.provider import Provider
+from .model_option import ModelOption
 # from qiskit.providers import Backend, BackendV2
 # from qiskit.transpiler import PassManager
 
 
 @dataclass(kw_only=True)
-class CircuitOption:
-    num_layers: int = None
-    coordinator: Coordinator = None
-    
-    num_qubits: int = None
-    penalty_lambda: float = None
-    feasible_state: List[int] = None # field(default_factory=list)
-    obj_dct: Dict[int, List] = None # field(default_factory=dict)
-    lin_constr_mtx: List[List[float]] = field(default_factory=list)
-    Hd_bitstr_list: List[List[int]] = field(default_factory=list)
-    obj_func: Callable = None
+class CircuitOption():
+    num_layers: int
+    provider: Provider
     shots: int = 1024
+
+
+
+    # num_qubits: int = None
+    # penalty_lambda: float = None
+    # feasible_state: List[int] = None # field(default_factory=list)
+    # obj_dct: Dict[int, List] = None # field(default_factory=dict)
+    # lin_constr_mtx: List[List[float]] = field(default_factory=list)
+    # Hd_bitstr_list: List[List[int]] = field(default_factory=list)
+    # obj_func: Callable = None
     
-    pass
+    
     # need_draw: bool = False
     # use_decompose: bool = False
     # use_serialization : bool = False # 不分解情况的可选项
@@ -42,5 +46,5 @@ class CircuitOption:
 
 @dataclass(kw_only=True)
 class ChocoCircuitOption(CircuitOption):
-    mcx_mode: str = None # 'constant' for 2 additional ancillas with linear depth, 'linear' for n - 1 additional ancillas with logarithmic depth
+    mcx_mode: str # 'constant' for 2 additional ancillas with linear depth, 'linear' for n - 1 additional ancillas with logarithmic depth
 

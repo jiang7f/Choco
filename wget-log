@@ -1,0 +1,3 @@
+--2024-08-21 13:35:27--  http://www.baidu.com/
+Resolving www.baidu.com (www.baidu.com)... failed: Unknown error.
+wget: unable to resolve host address ‘www.baidu.com’

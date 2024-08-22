@@ -1,14 +1,15 @@
 from abc import ABC, abstractmethod
 from typing import Dict, Tuple, List, Generic, TypeVar
-from ...options import CircuitOption
+from ...options import CircuitOption, ModelOption
 from qiskit import QuantumCircuit
 
 T = TypeVar("T", bound=CircuitOption)
 
 
 class QiskitCircuit(ABC, Generic[T]):
-    def __init__(self, circuit_option: T):
-        self.circuit_option = circuit_option
+    def __init__(self, circuit_option: T, model_option: ModelOption):
+        self.circuit_option: T = circuit_option
+        self.model_option: ModelOption = model_option
 
     def process_counts(self, counts: Dict) -> Tuple[List[List[int]], List[float]]:
         collapse_state = [[int(char) for char in state] for state in counts.keys()]
@@ -17,22 +18,29 @@ class QiskitCircuit(ABC, Generic[T]):
         return collapse_state, probs
 
     @abstractmethod
+    def get_num_params(self):
+        pass
+
+    @abstractmethod
     def inference(self, params):
         pass
 
     @abstractmethod
-    def create_circuit(self) -> None:
+    def create_circuit(self) -> QuantumCircuit:
         pass
 
-    def get_circuit_cost_function(self):
-        def circuit_cost_function(params):
+    def get_circuit_cost_func(self):
+        def circuit_cost_func(params):
             collapse_state, probs = self.inference(params)
             costs = 0
             for value, prob in zip(collapse_state, probs):
-                costs += self.circuit_option.obj_func(value) * prob
+                costs += self.model_option.obj_func(value) * prob
             return costs
 
-        return circuit_cost_function
+        return circuit_cost_func
 
-    def draw_circuit(self) -> None:
+    def draw(self) -> None:
+        pass
+
+    def analyze(self):
         pass
