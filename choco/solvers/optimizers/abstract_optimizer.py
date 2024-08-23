@@ -9,6 +9,12 @@ class Optimizer(ABC):
     def __init__(self):
         self.optimizer_option: OptimizerOption = None
 
+    def obj_dir_trans(self, obj_dir, obj_func):
+        """如果是max问题 转换成min问题"""
+        def trans_obj_func(*args, **kwargs):
+            return obj_dir * obj_func(*args, **kwargs)
+        return trans_obj_func
+
     @abstractmethod
     def minimize(self):
         pass

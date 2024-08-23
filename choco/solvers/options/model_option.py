@@ -9,6 +9,6 @@ class ModelOption:
     obj_dct: Dict[int, List] = None # field(default_factory=dict)
     lin_constr_mtx: List[List[float]] = field(default_factory=list)
     Hd_bitstr_list: List[List[int]] = field(default_factory=list)
+    obj_sense: int = None
     obj_func: Callable = None
-    obj_dir: int = None
     best_cost: float = None

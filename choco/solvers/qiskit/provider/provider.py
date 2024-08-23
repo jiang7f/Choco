@@ -16,7 +16,7 @@ class Provider(ABC):
 
 
 class CustomProvider(Provider):
-    '''没有预设的Provider 可自定义传入三参'''
+    """没有预设的Provider 可自定义传入三参"""
     def __init__(
         self,
         backend: Union[Backend, BackendV2],

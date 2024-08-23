@@ -15,7 +15,8 @@ class Cobyla(Optimizer):
     
     def minimize(self):
         optimizer_option = self.optimizer_option
-        cost_func = optimizer_option.cost_func
+        obj_dir = optimizer_option.obj_dir
+        cost_func = self.obj_dir_trans(obj_dir, optimizer_option.cost_func)
         iteration_count = 0
         params = self._initialize_params(optimizer_option.num_params)
 
@@ -24,7 +25,7 @@ class Cobyla(Optimizer):
             iteration_count += 1
 
             if iteration_count % 10 == 0:
-                iprint(f"Iteration {iteration_count}, Result: {cost_func(params)}")
+                iprint(f"iteration {iteration_count}, result: {obj_dir * cost_func(params)}")
 
         result = minimize(
             cost_func, 

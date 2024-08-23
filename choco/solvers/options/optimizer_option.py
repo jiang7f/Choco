@@ -3,6 +3,7 @@ from typing import List, Callable, Tuple
 
 @dataclass(kw_only=True)
 class OptimizerOption:
+    obj_dir: int = None
     num_params: int = None
     cost_func: Callable = None
 

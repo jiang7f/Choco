@@ -1,17 +1,29 @@
+should_print = True
+
 from choco.model import LinearConstrainedBinaryOptimization as LcboModel
 from choco.solvers.optimizers.non_gradient import Cobyla
 from choco.solvers.qiskit.choco import ChocoSolver
 from choco.solvers.qiskit.provider.aer import AerProvider
 
+# model ----------------------------------------------
 m = LcboModel()
 x = m.addVars(3, name='x')
-m.setObjective(-x[0] -x[1] -x[2], 'min')
-m.addConstr(x[0]- x[1] + x[2] == 1)
+m.setObjective(x[0] + x[1] + x[2], 'min')
+m.addConstr(x[0] - x[1] + x[2] == 1)
 print(m)
+optimize = m.optimize()
+print(f'optimize_cost: {optimize}\n\n')
+# sovler ----------------------------------------------
 opt = Cobyla(max_iter=200)
 aer = AerProvider()
-csolver = ChocoSolver(prb_model=m, optimizer=opt, num_layers=5, provider=aer,mcx_mode="linear")
-result = csolver.solve()
-# eval = csolver.evaluation()
+choco_solver = ChocoSolver(
+    prb_model=m,   # 问题模型
+    optimizer=opt, # 优化器
+    provider=aer,  # 提供器（backend + 配对 pass_mannager ）
+    num_layers=1, 
+    mcx_mode="linear"
+)
+result = choco_solver.solve()
+eval = choco_solver.evaluation()
 print(result)
-# print(eval)
+print(eval)

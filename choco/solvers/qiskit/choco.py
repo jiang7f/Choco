@@ -64,15 +64,15 @@ class ChocoSolver(Solver):
         *,
         prb_model: LcboModel,
         optimizer: Optimizer,
-        num_layers: int,
         provider: Provider,
+        num_layers: int,
         shots: int = 1024,
         mcx_mode: str,
     ):
         super().__init__(prb_model, optimizer)
         self.circuit_option = ChocoCircuitOption(
-            num_layers=num_layers,
             provider=provider,
+            num_layers=num_layers,
             shots=shots,
             mcx_mode=mcx_mode,
         )

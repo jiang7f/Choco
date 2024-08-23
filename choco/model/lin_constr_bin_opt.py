@@ -15,7 +15,6 @@ class LinearConstrainedBinaryOptimization(Model):
         set_print_form()
         super().__init__()
         self.slack_groups = 1
-        self.obj_dir = None
         self.penalty_lambda = 0x7FFF# 正无穷
         
 
@@ -139,7 +138,6 @@ class LinearConstrainedBinaryOptimization(Model):
     def setObjective(self, expression, sense):
         assert sense in ['min', 'max']
         super().setObjective(expression, sense)
-        self.obj_dir = 1 if sense == 'min' else -1
 
     # def find_state_probability(self, state):
     
@@ -194,7 +192,7 @@ class LinearConstrainedBinaryOptimization(Model):
         if self._best_cost is None:
             best_cost, best_solution_case = self.optimize_with_gurobi()
             iprint(f'best_cost: {best_cost}')
-            iprint(f'best_solution_case: {best_solution_case}')
+            iprint(f'best_solution_case: {best_solution_case}\n')
             self._best_cost = best_cost
         return self._best_cost
     
@@ -206,15 +204,15 @@ class LinearConstrainedBinaryOptimization(Model):
             obj_dct = self.obj_dct,
             lin_constr_mtx = self.lin_constr_mtx,
             Hd_bitstr_list = self.driver_bitstr,
+            obj_sense=self.obj_sense,
             obj_func = self.obj_func,
-            obj_dir=self.obj_dct,
             best_cost=self.best_cost
         )
         
         return model_option
 
     def optimize(self):
-        ''''''
+        """"""
         return self.optimize_with_gurobi()
         
 

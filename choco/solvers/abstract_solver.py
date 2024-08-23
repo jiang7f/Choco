@@ -33,6 +33,7 @@ class Solver(ABC):
         pass
 
     def solve(self):
+        self.optimizer.optimizer_option.obj_dir = 1 if self.mode_option.obj_sense == 'min' else -1
         self.optimizer.optimizer_option.cost_func = self.circuit.get_circuit_cost_func()
         self.optimizer.optimizer_option.num_params = self.circuit.get_num_params()
         best_params, self.iter_count = self.optimizer.minimize()
@@ -40,17 +41,16 @@ class Solver(ABC):
         return self.collapse_state_lst, self.probs_lst, self.iter_count
     
     def evaluation(self):
-        '''在调用过solve之后使用'''
+        """在调用过solve之后使用"""
         assert self.collapse_state_lst is not None
 
         mode_option = self.mode_option
         data_analyzer = DataAnalyzer(
-            self.collapse_state_lst, 
-            self.probs_lst, 
-            mode_option.obj_func, 
-            mode_option.obj_dir, 
-            mode_option.best_cost,
-            mode_option.lin_constr_mtx
+            collapse_state_lst = self.collapse_state_lst, 
+            probs_lst = self.probs_lst, 
+            obj_func = mode_option.obj_func, 
+            best_cost = mode_option.best_cost,
+            lin_constr_mtx = mode_option.lin_constr_mtx
         )
         data_metrics_lst = data_analyzer.summary()
         # 把 iteration_count 加到 指标 结尾，构成完整评估

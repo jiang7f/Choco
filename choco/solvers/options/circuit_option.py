@@ -9,8 +9,8 @@ from .model_option import ModelOption
 
 @dataclass(kw_only=True)
 class CircuitOption():
-    num_layers: int
     provider: Provider
+    num_layers: int
     shots: int = 1024
 
 
