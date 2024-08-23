@@ -9,3 +9,7 @@ model:
 4. 自动转换 Choco-Q 所需内部数据结构  
 
 [测试见 testbed.ipynb](./testbed.ipynb)
+
+
+基于 Choco-Q、 AerProvider、 Cobyla已实现, 其余待补充  
+[测试见 testbed_1.py](./testbed_1.py)
