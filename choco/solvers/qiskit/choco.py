@@ -17,13 +17,14 @@ class ChocoCircuit(QiskitCircuit[ChocoCircuitOption]):
     def __init__(self, circuit_option: ChocoCircuitOption, model_option: ModelOption):
         super().__init__(circuit_option, model_option)
         self.inference_circuit = self.create_circuit()
+        print(self.model_option.Hd_bitstr_list)
 
     def get_num_params(self):
         return self.circuit_option.num_layers * 2
     
     def inference(self, params):
         final_qc = self.inference_circuit.assign_parameters(params)
-        counts = self.circuit_option.provider.get_counts(final_qc, shots=1024)
+        counts = self.circuit_option.provider.get_counts(final_qc, shots=self.circuit_option.shots)
         collapse_state, probs = self.process_counts(counts)
         return collapse_state, probs
 
@@ -41,7 +42,6 @@ class ChocoCircuit(QiskitCircuit[ChocoCircuitOption]):
         Ho_params = [Parameter(f"Ho_params[{i}]") for i in range(num_layers)]
         Hd_params = [Parameter(f"Hd_params[{i}]") for i in range(num_layers)]
 
-        assert len(Hd_params) == num_layers
         for i in np.nonzero(self.model_option.feasible_state)[0]:
             qc.x(i)
 
@@ -68,7 +68,7 @@ class ChocoSolver(Solver):
         provider: Provider,
         num_layers: int,
         shots: int = 1024,
-        mcx_mode: str,
+        mcx_mode: str = "linear",
     ):
         super().__init__(prb_model, optimizer)
         self.circuit_option = ChocoCircuitOption(

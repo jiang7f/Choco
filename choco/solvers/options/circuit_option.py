@@ -13,8 +13,6 @@ class CircuitOption():
     num_layers: int
     shots: int = 1024
 
-
-
     # num_qubits: int = None
     # penalty_lambda: float = None
     # feasible_state: List[int] = None # field(default_factory=list)

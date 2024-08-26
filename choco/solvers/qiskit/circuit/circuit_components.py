@@ -25,3 +25,27 @@ def commute_compnt(qc: QuantumCircuit, param, Hd_bitstr_list, anc_idx, mcx_mode)
         nonzero_indices = np.nonzero(hdi_vct)[0].tolist()
         hdi_bitstr = [0 if x == -1 else 1 for x in hdi_vct if x != 0]
         driver_component(qc, nonzero_indices, anc_idx, hdi_bitstr, param, mcx_mode)
+
+def cyclic_compnt(qc: QuantumCircuit, param, constr_cyclic):
+    for constr in constr_cyclic:
+        nzlist = np.nonzero(constr[:-1])[0]
+        if len(nzlist) < 2:
+            continue
+        for i in range(len(nzlist)):
+            j = (i + 1) % len(nzlist)
+            ## gate for X_iX_j
+            qc.h(nzlist[j])
+            qc.h(nzlist[i])
+            qc.cx(nzlist[i], nzlist[j])
+            qc.rz(2 * param, nzlist[j])
+            qc.cx(nzlist[i], nzlist[j])
+            qc.h(nzlist[j])
+            qc.h(nzlist[i])
+            ## gate for Y_iY_j
+            qc.u(np.pi / 2, np.pi / 2, np.pi / 2, nzlist[j])
+            qc.u(np.pi / 2, np.pi / 2, np.pi / 2, nzlist[i])
+            qc.cx(nzlist[i], nzlist[j])
+            qc.rz(2 * param, nzlist[j])
+            qc.cx(nzlist[i], nzlist[j])
+            qc.u(np.pi / 2, np.pi / 2, np.pi / 2, nzlist[j])
+            qc.u(np.pi / 2, np.pi / 2, np.pi / 2, nzlist[i])

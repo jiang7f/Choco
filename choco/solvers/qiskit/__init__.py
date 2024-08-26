@@ -7,3 +7,6 @@ from .provider import (
     FakeBrisbaneProvider,
 )
 from .choco import ChocoSolver
+from .cyclic import CyclicSolver
+from .hea import HeaSolver
+from .penalty import PenaltySolver

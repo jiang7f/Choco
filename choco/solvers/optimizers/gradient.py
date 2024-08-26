@@ -8,7 +8,6 @@ from choco.solvers.options.optimizer_option import AdamOptimizerOption as Optimi
 from .abstract_optimizer import Optimizer
 
 
-
 class AdamOptimizer(Optimizer):
     def __init__(
         self,
@@ -28,7 +27,8 @@ class AdamOptimizer(Optimizer):
     def minimize(self):
         optimizer_option = self.optimizer_option
         obj_dir = optimizer_option.obj_dir
-        cost_func = self.obj_dir_trans(obj_dir, optimizer_option.cost_func)
+        cost_func = optimizer_option.cost_func
+        cost_func_trans = self.obj_dir_trans(obj_dir, cost_func)
         params = self._initialize_params(optimizer_option.num_params)
         max_iter = optimizer_option.max_iter
         learning_rate = optimizer_option.learning_rate
@@ -61,7 +61,7 @@ class AdamOptimizer(Optimizer):
 
         with tqdm(total=max_iter) as pbar:
             for iter in range(max_iter):
-                gradients = gradient_by_param_shift(params, cost_func)
+                gradients = gradient_by_param_shift(params, cost_func_trans)
                 m = beta1 * m + (1 - beta1) * gradients
                 v = beta2 * v + (1 - beta2) * gradients**2
                 m_hat = m / (1 - beta1 ** (iter + 1))

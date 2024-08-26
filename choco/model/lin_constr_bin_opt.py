@@ -1,13 +1,12 @@
-from .model import Variable, Expression, Constraint, Model
-from ..utils import set_print_form
-from ..utils import iprint
-from typing import Dict, Tuple, Set, List, Union
 import numpy as np
-from ..utils.linear_system import find_basic_solution
-# from ..solvers import Solver
-# from ..solvers.data_analyzer import DataAnalyzer
-from ..solvers.options import CircuitOption, OptimizerOption, ModelOption
-from ..utils.errors import QuickFeedbackException
+from typing import Dict, Tuple, Set, List, Union
+
+from choco.model.model import Variable, Expression, Constraint, Model
+from choco.utils import set_print_form
+from choco.utils import iprint
+from choco.utils.errors import QuickFeedbackException
+from choco.utils.linear_system import find_basic_solution
+from choco.solvers.options import CircuitOption, OptimizerOption, ModelOption
 
 class LinearConstrainedBinaryOptimization(Model):
     def __init__(self):

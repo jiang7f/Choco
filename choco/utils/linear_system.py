@@ -90,7 +90,7 @@ def find_basic_solution(matrix):
         solution[index] = 1
         solution[pivot_columns] = x
         basic_solutions.append(solution)
-    ## 通过加或者减 实现基础解系的每个解在（-1，0，1）中  
+    # 通过加或者减 实现基础解系的每个解在（-1，0，1）中  
     return np.array(basic_solutions)
 
 def find_nonzero_indices(u):

@@ -31,7 +31,7 @@ class DataAnalyzer():
         # maxprobidex = np.argmax(probs)
         # max_prob_solution = collapse_state[maxprobidex]
         # cost = self.obj_dir * self.obj_func(max_prob_solution)
-        ARG = abs((mean_cost - best_cost) / best_cost)
+        ARG = abs((mean_cost - best_cost) / (best_cost + 1e-8))
         # iprint(f"max_prob_solution: {max_prob_solution}, cost: {cost}, max_prob: {probs[maxprobidex]:.2%}") #-
         iprint(f'\nbest_solution_probs: {best_solution_probs:.1f}')
         iprint(f'in_constraint_probs: {in_constraints_probs:.1f}')
