@@ -110,7 +110,7 @@ def get_circ_unitary(quantum_circuit):
     job = backend.run(new_circuit)
     result = job.result()
     unitary = result.get_unitary()
-    from quBLP.utils.linear_system import reorder_tensor_product
+    from choco.utils.linear_system import reorder_tensor_product
     reoder_unitary = reorder_tensor_product(np.array(unitary))
     # 张量积逆序
     return reoder_unitary

@@ -1,8 +1,8 @@
 import numpy as np
 from tqdm import tqdm
 
-from quBLP.utils import iprint
-from quBLP.utils.gadget import get_main_file_info, create_directory_if_not_exists
+from choco.utils import iprint
+from choco.utils.gadget import get_main_file_info, create_directory_if_not_exists
 
 from choco.solvers.options.optimizer_option import AdamOptimizerOption as OptimizerOption
 from .abstract_optimizer import Optimizer
