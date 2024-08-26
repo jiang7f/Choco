@@ -10,6 +10,8 @@ model:
 
 [测试见 testbed.ipynb](./testbed.ipynb)
 
-
-基于 Choco-Q、 AerProvider、 Cobyla已实现, 其余待补充  
+已实现：
+算法： Choco-Q、Cyclic、Hea、Penalty
+提供器：AerGpuProvider、AerProvider、FakeBrisbaneProvider、FakeKyivProvider、FakeTorinoProvider、DdsimProvider
+优化器：AdamOptimizer、CobylaOptimizer
 [测试见 testbed_1.py](./testbed_1.py)
