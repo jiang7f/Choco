@@ -1,7 +1,7 @@
+import numpy as np
 from itertools import combinations
 from qiskit import QuantumCircuit
 from typing import Dict
-import numpy as np
 from .hdi_decompose import driver_component
 
 

@@ -1,8 +1,8 @@
 from dataclasses import dataclass, field
 from typing import List, Callable, Tuple, Dict, Union
+
 from .model_option import ModelOption
 from ..qiskit.provider import Provider
-from .model_option import ModelOption
 # from qiskit.providers import Backend, BackendV2
 # from qiskit.transpiler import PassManager
 

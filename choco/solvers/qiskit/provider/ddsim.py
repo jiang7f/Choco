@@ -1,4 +1,4 @@
-from .provider import Provider
+from .provider import Provider, EXTENDED_BASIS_GATES
 from qiskit import QuantumCircuit
 from mqt import ddsim
 from qiskit.transpiler.preset_passmanagers import generate_preset_pass_manager
@@ -10,27 +10,7 @@ class DdsimProvider(Provider):
         self.backend = ddsim.DDSIMProvider().get_backend("qasm_simulator")
         self.pass_manager = generate_preset_pass_manager(
             optimization_level=2,
-            basis_gates=[
-                "measure",
-                "cx",
-                "id",
-                "s",
-                "sdg",
-                "x",
-                "y",
-                "h",
-                "z",
-                "mcx",
-                "cz",
-                "sx",
-                "sy",
-                "t",
-                "tdg",
-                "swap",
-                "rx",
-                "ry",
-                "rz",
-            ],
+            basis_gates=EXTENDED_BASIS_GATES,
         )
 
     def get_counts(self, qc: QuantumCircuit, shots: int):

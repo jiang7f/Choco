@@ -1,6 +1,8 @@
 from typing import Iterable, Union, Tuple
 from qiskit_aer import AerSimulator
 from qiskit_ibm_runtime.fake_provider import FakeQuebec, FakeAlmadenV2, FakeBelem, FakeSantiago
+
+
 class Metric:
     def __init__(self, backend=AerSimulator()) -> None:
         self.backend = backend

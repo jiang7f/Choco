@@ -1,12 +1,14 @@
+from math import prod
 from quBLP.utils import iprint
 from qiskit.circuit import QuantumCircuit
 from qiskit.converters import dag_to_circuit, circuit_to_dag
 from qiskit.dagcircuit import DAGOpNode
 from qiskit import transpile
-from math import prod
 from qiskit_aer import AerSimulator
 from qiskit_ibm_runtime.fake_provider import FakeKyoto, FakeKyiv, FakeSherbrooke, FakeQuebec, FakeAlmadenV2, FakeBelem, FakeSantiago
 from .metrics import Metric
+
+
 class Feature:
     """ get the feature of a quantum circuit,like fidelity, latency for every qubits
     """

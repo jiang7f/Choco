@@ -9,9 +9,6 @@ class OptimizerOption:
 
     # params_optimization_method: str = 'COBYLA'
     # max_iter: int = 30
-    # learning_rate: float = 0.1
-    # beta1: float = 0.9
-    # beta2: float = 0.999
     # opt_id: any = None
     # use_local_params: bool = False
     # #
@@ -20,3 +17,12 @@ class OptimizerOption:
 @dataclass(kw_only=True)
 class CobylaOptimizerOption(OptimizerOption):
     max_iter: int = 50
+
+@dataclass(kw_only=True)
+class AdamOptimizerOption(OptimizerOption):
+    max_iter: int = 50
+    learning_rate: float = 0.1
+    beta1: float = 0.9
+    beta2: float = 0.999
+
+

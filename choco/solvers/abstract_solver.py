@@ -1,11 +1,11 @@
 from abc import ABC, abstractmethod
+
+from choco.solvers.optimizers import Optimizer
+from choco.utils import iprint
+from choco.model import LinearConstrainedBinaryOptimization as LcboModel
+
 from .options import CircuitOption
-from ..solvers.optimizers import Optimizer
-from ..utils import iprint
-from ..model import LinearConstrainedBinaryOptimization as LcboModel
 from .options.model_option import ModelOption
-from .qiskit.provider import Provider
-from dataclasses import replace, asdict
 from .qiskit.circuit import QiskitCircuit
 from .data_analyzer import DataAnalyzer
 
@@ -33,7 +33,7 @@ class Solver(ABC):
         pass
 
     def solve(self):
-        self.optimizer.optimizer_option.obj_dir = 1 if self.mode_option.obj_sense == 'min' else -1
+        self.optimizer.optimizer_option.obj_dir = self.mode_option.obj_dir
         self.optimizer.optimizer_option.cost_func = self.circuit.get_circuit_cost_func()
         self.optimizer.optimizer_option.num_params = self.circuit.get_num_params()
         best_params, self.iter_count = self.optimizer.minimize()

@@ -4,6 +4,12 @@ from qiskit import QuantumCircuit
 from qiskit.providers import Backend, BackendV2
 from qiskit.transpiler import PassManager
 
+CORE_BASIS_GATES = ["measure", "cx", "id", "rz", "sx", "x"]
+EXTENDED_BASIS_GATES = [
+    "measure", "cx", "id", "s", "sdg", "x", "y", "h", "z", "mcx", 
+    "cz", "sx", "sy", "t", "tdg", "swap", "rx", "ry", "rz",
+]
+
 
 class Provider(ABC):
     def __init__(self):
@@ -17,11 +23,12 @@ class Provider(ABC):
 
 class CustomProvider(Provider):
     """没有预设的Provider 可自定义传入三参"""
+
     def __init__(
         self,
         backend: Union[Backend, BackendV2],
         pass_manager: PassManager,
-        get_counts_fun: Callable[[QuantumCircuit], dict]
+        get_counts_fun: Callable[[QuantumCircuit], dict],
     ):
         self.backend = backend
         self.pass_manager = pass_manager

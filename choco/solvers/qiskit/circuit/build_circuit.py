@@ -1,10 +1,10 @@
 from abc import ABC, abstractmethod
 from typing import Dict, Tuple, List, Generic, TypeVar
-from ...options import CircuitOption, ModelOption
 from qiskit import QuantumCircuit
+from ...options import CircuitOption, ModelOption
+
 
 T = TypeVar("T", bound=CircuitOption)
-
 
 class QiskitCircuit(ABC, Generic[T]):
     def __init__(self, circuit_option: T, model_option: ModelOption):

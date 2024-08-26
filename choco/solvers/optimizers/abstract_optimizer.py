@@ -1,7 +1,9 @@
 from abc import ABC, abstractmethod
-from ...solvers.options import OptimizerOption
-from typing import TypeVar, Generic
 import numpy as np
+from typing import TypeVar, Generic
+
+from choco.solvers.options import OptimizerOption
+
 
 # np.random.seed(0x7f)
 

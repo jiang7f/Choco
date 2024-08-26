@@ -15,7 +15,8 @@ class LinearConstrainedBinaryOptimization(Model):
         set_print_form()
         super().__init__()
         self.slack_groups = 1
-        self.penalty_lambda = 0x7FFF# 正无穷
+        self.obj_dir = None
+        self.penalty_lambda = 0x7FFF # 大数
         
 
         self._variables_idx = None
@@ -31,6 +32,13 @@ class LinearConstrainedBinaryOptimization(Model):
 
         # self.collapse_state = None
         # self.probs = None
+    def __repr__(self):
+        repr = super().__repr__()
+        return (
+            f"{repr}"
+            f"penalty_lambda:\n{self.penalty_lambda}\n\n"
+        )
+
     
     def update(self):
         """设定内部数据结构为None, 实现调用 @property 时重新生成"""
@@ -113,7 +121,7 @@ class LinearConstrainedBinaryOptimization(Model):
         def obj_function(values: List[Union[int, float]]) -> Union[int, float]:
             obj_pnt_expr = self.objective
             for constr in self.constraints:
-                obj_pnt_expr += self.penalty_lambda / len(self.constraints) ** 2 * (constr.expr - constr.rhs) ** 2
+                obj_pnt_expr += self.obj_dir * self.penalty_lambda / len(self.constraints) ** 2 * (constr.expr - constr.rhs) ** 2
 
             result = 0
             for vars_tuple, coeff in obj_pnt_expr.terms.items():
@@ -138,6 +146,7 @@ class LinearConstrainedBinaryOptimization(Model):
     def setObjective(self, expression, sense):
         assert sense in ['min', 'max']
         super().setObjective(expression, sense)
+        self.obj_dir = 1 if self.obj_sense == 'min' else -1
 
     # def find_state_probability(self, state):
     
@@ -204,7 +213,7 @@ class LinearConstrainedBinaryOptimization(Model):
             obj_dct = self.obj_dct,
             lin_constr_mtx = self.lin_constr_mtx,
             Hd_bitstr_list = self.driver_bitstr,
-            obj_sense=self.obj_sense,
+            obj_dir=self.obj_dir,
             obj_func = self.obj_func,
             best_cost=self.best_cost
         )

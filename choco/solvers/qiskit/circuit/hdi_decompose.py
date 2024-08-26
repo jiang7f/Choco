@@ -1,10 +1,11 @@
+import numpy as np
 from qiskit import QuantumCircuit, QuantumRegister, ClassicalRegister
 from qiskit_aer import Aer
 from qiskit import transpile
 from scipy.linalg import expm
-import numpy as np
-from .mcx_decompose import mcx_n_anc_log_decompose
 from typing import List, Union, Tuple, Iterable
+
+from .mcx_decompose import mcx_n_anc_log_decompose
 
 
 def apply_convert(qc: QuantumCircuit, list_qubits, bit_string):

@@ -1,4 +1,4 @@
-from .provider import Provider
+from .provider import Provider, CORE_BASIS_GATES, EXTENDED_BASIS_GATES
 from qiskit import QuantumCircuit
 from qiskit_aer import AerSimulator
 from qiskit.transpiler.preset_passmanagers import generate_preset_pass_manager
@@ -13,7 +13,7 @@ class AerProvider(Provider):
         super().__init__()
         self.backend = AerSimulator()
         self.pass_manager = generate_preset_pass_manager(
-            optimization_level=2, basis_gates=["measure", "cx", "id", "rz", "sx", "x"]
+            optimization_level=2, basis_gates=CORE_BASIS_GATES,
         )
 
     def get_counts(self, qc: QuantumCircuit, shots: int) -> Dict:
@@ -31,27 +31,7 @@ class AerGpuProvider(Provider):
         self.backend = AerSimulator(method="statevector", device="GPU")
         self.pass_manager = generate_preset_pass_manager(
             optimization_level=3,
-            basis_gates=[
-                "measure",
-                "cx",
-                "id",
-                "s",
-                "sdg",
-                "x",
-                "y",
-                "h",
-                "z",
-                "mcx",
-                "cz",
-                "sx",
-                "sy",
-                "t",
-                "tdg",
-                "swap",
-                "rx",
-                "ry",
-                "rz",
-            ],
+            basis_gates=EXTENDED_BASIS_GATES,
         )
 
     def get_counts(self, qc: QuantumCircuit, shots: int) -> Dict:

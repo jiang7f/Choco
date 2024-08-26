@@ -1,18 +1,19 @@
-from ...utils import iprint #, read_last_row, get_main_file_info, create_directory_if_not_exists
 from scipy.optimize import minimize
 # import numpy as np
 # import csv
 # import os
 
+from choco .utils import iprint #, read_last_row, get_main_file_info, create_directory_if_not_exists
 from .abstract_optimizer import Optimizer
 from ..options.optimizer_option import CobylaOptimizerOption as OptimizerOption
 
 
-class Cobyla(Optimizer):
+class CobylaOptimizer(Optimizer):
     def __init__(self, *, max_iter: int = 50):
         super().__init__()
         self.optimizer_option: OptimizerOption = OptimizerOption(max_iter=max_iter)
-    
+        # optimizer_option.opt_id
+
     def minimize(self):
         optimizer_option = self.optimizer_option
         obj_dir = optimizer_option.obj_dir
