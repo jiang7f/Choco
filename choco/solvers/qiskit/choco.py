@@ -5,7 +5,7 @@ from qiskit.circuit import Parameter
 from choco.solvers.abstract_solver import Solver
 from choco.solvers.optimizers import Optimizer
 from choco.solvers.options import CircuitOption, OptimizerOption, ModelOption
-from choco.solvers.options.circuit_option import ChocoCircuitOption
+from choco.solvers.options.circuit_option import ChCircuitOption
 from choco.model import LinearConstrainedBinaryOptimization as LcboModel
 
 from .circuit import QiskitCircuit
@@ -13,8 +13,8 @@ from .provider import Provider
 from .circuit.circuit_components import obj_compnt, commute_compnt
 
 
-class ChocoCircuit(QiskitCircuit[ChocoCircuitOption]):
-    def __init__(self, circuit_option: ChocoCircuitOption, model_option: ModelOption):
+class ChocoCircuit(QiskitCircuit[ChCircuitOption]):
+    def __init__(self, circuit_option: ChCircuitOption, model_option: ModelOption):
         super().__init__(circuit_option, model_option)
         self.inference_circuit = self.create_circuit()
         print(self.model_option.Hd_bitstr_list)
@@ -71,7 +71,7 @@ class ChocoSolver(Solver):
         mcx_mode: str = "linear",
     ):
         super().__init__(prb_model, optimizer)
-        self.circuit_option = ChocoCircuitOption(
+        self.circuit_option = ChCircuitOption(
             provider=provider,
             num_layers=num_layers,
             shots=shots,

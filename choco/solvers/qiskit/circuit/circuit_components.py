@@ -26,6 +26,12 @@ def commute_compnt(qc: QuantumCircuit, param, Hd_bitstr_list, anc_idx, mcx_mode)
         hdi_bitstr = [0 if x == -1 else 1 for x in hdi_vct if x != 0]
         driver_component(qc, nonzero_indices, anc_idx, hdi_bitstr, param, mcx_mode)
 
+def cqa_compnt(qc: QuantumCircuit, params, Hd_bitstr_list, anc_idx, mcx_mode):
+    for idx, hdi_vct in enumerate(Hd_bitstr_list):
+        nonzero_indices = np.nonzero(hdi_vct)[0].tolist()
+        hdi_bitstr = [0 if x == -1 else 1 for x in hdi_vct if x != 0]
+        driver_component(qc, nonzero_indices, anc_idx, hdi_bitstr, params[idx], mcx_mode)
+
 def cyclic_compnt(qc: QuantumCircuit, param, constr_cyclic):
     for constr in constr_cyclic:
         nzlist = np.nonzero(constr[:-1])[0]

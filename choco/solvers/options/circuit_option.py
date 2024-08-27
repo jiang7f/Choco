@@ -43,6 +43,6 @@ class CircuitOption():
     # constraints_for_others: List[List[float]] = field(default_factory=list)
 
 @dataclass(kw_only=True)
-class ChocoCircuitOption(CircuitOption):
+class ChCircuitOption(CircuitOption):
     mcx_mode: str # 'constant' for 2 additional ancillas with linear depth, 'linear' for n - 1 additional ancillas with logarithmic depth
 

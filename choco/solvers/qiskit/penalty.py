@@ -5,7 +5,6 @@ from qiskit.circuit import Parameter
 from choco.solvers.abstract_solver import Solver
 from choco.solvers.optimizers import Optimizer
 from choco.solvers.options import CircuitOption, OptimizerOption, ModelOption
-from choco.solvers.options.circuit_option import ChocoCircuitOption
 from choco.model import LinearConstrainedBinaryOptimization as LcboModel
 
 from .circuit import QiskitCircuit
