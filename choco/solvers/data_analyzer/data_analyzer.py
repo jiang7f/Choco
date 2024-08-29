@@ -35,7 +35,7 @@ class DataAnalyzer():
         # iprint(f"max_prob_solution: {max_prob_solution}, cost: {cost}, max_prob: {probs[maxprobidex]:.2%}") #-
         iprint(f'\nbest_solution_probs: {best_solution_probs:.1f}')
         iprint(f'in_constraint_probs: {in_constraints_probs:.1f}')
-        iprint(f'ARG: {ARG:.1f}')
+        iprint(f'ARG: {ARG:.10f}')
         iprint(f"mean_cost: {mean_cost:.1f}\n")
         
         return [best_solution_probs, in_constraints_probs, ARG]

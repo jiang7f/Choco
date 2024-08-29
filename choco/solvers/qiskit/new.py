@@ -7,17 +7,25 @@ from choco.solvers.optimizers import Optimizer
 from choco.solvers.options import CircuitOption, OptimizerOption, ModelOption
 from choco.solvers.options.circuit_option import ChCircuitOption
 from choco.model import LinearConstrainedBinaryOptimization as LcboModel
+from choco.utils import iprint
 
 from .circuit import QiskitCircuit
 from .provider import Provider
 from .circuit.circuit_components import obj_compnt, cqa_compnt
 
 
-class CqaCircuit(QiskitCircuit[ChCircuitOption]):
+class NewCircuit(QiskitCircuit[ChCircuitOption]):
     def __init__(self, circuit_option: ChCircuitOption, model_option: ModelOption):
         super().__init__(circuit_option, model_option)
+        # self.model_option.Hd_bitstr_list = list(reversed(self.model_option.Hd_bitstr_list))
+        # self.model_option.feasible_state = [0, 0, 1, 0, 0]
+        first_row = self.model_option.Hd_bitstr_list[0, :]
+        self.model_option.Hd_bitstr_list = np.vstack([self.model_option.Hd_bitstr_list, first_row])
+
+        iprint(self.model_option.feasible_state)
+        iprint(self.model_option.Hd_bitstr_list)
+
         self.inference_circuit = self.create_circuit()
-        print(self.model_option.Hd_bitstr_list)
 
     def get_num_params(self):
         return self.circuit_option.num_layers * len(self.model_option.Hd_bitstr_list)
@@ -59,7 +67,7 @@ class CqaCircuit(QiskitCircuit[ChCircuitOption]):
         transpiled_qc = self.circuit_option.provider.pass_manager.run(qc)
         return transpiled_qc
 
-class CqaSolver(Solver):
+class NewSolver(Solver):
     def __init__(
         self,
         *,
@@ -81,7 +89,7 @@ class CqaSolver(Solver):
     @property
     def circuit(self):
         if self._circuit is None:
-            self._circuit = CqaCircuit(self.circuit_option, self.mode_option)
+            self._circuit = NewCircuit(self.circuit_option, self.mode_option)
         return self._circuit
 
 

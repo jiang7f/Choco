@@ -23,4 +23,5 @@ class Optimizer(ABC):
 
     def _initialize_params(self, num_params):
         """初始化电路参数"""
+        # return np.pi / 4 * np.ones(num_params)
         return 2 * np.pi * np.random.uniform(0, 1, num_params)
