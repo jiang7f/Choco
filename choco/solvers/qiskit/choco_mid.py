@@ -7,28 +7,20 @@ from choco.solvers.optimizers import Optimizer
 from choco.solvers.options import CircuitOption, OptimizerOption, ModelOption
 from choco.solvers.options.circuit_option import ChCircuitOption
 from choco.model import LinearConstrainedBinaryOptimization as LcboModel
-from choco.utils import iprint
 
 from .circuit import QiskitCircuit
 from .provider import Provider
-from .circuit.circuit_components import obj_compnt, new_compnt
+from .circuit.circuit_components import obj_compnt, commute_compnt_for_mid
 
 
-class NewCircuit(QiskitCircuit[ChCircuitOption]):
+class ChocoCircuitMid(QiskitCircuit[ChCircuitOption]):
     def __init__(self, circuit_option: ChCircuitOption, model_option: ModelOption):
         super().__init__(circuit_option, model_option)
-        # self.model_option.Hd_bitstr_list = list(reversed(self.model_option.Hd_bitstr_list))
-        # self.model_option.feasible_state = [0, 0, 1, 0, 0]
-        first_row = self.model_option.Hd_bitstr_list[0, :]
-        self.model_option.Hd_bitstr_list = np.vstack([self.model_option.Hd_bitstr_list, first_row])
-
-        iprint(self.model_option.feasible_state)
-        iprint(self.model_option.Hd_bitstr_list)
-
         self.inference_circuit = self.create_circuit()
+        print(self.model_option.Hd_bitstr_list)
 
     def get_num_params(self):
-        return self.circuit_option.num_layers * len(self.model_option.Hd_bitstr_list)
+        return self.circuit_option.num_layers * 2
     
     def inference(self, params):
         final_qc = self.inference_circuit.assign_parameters(params)
@@ -40,7 +32,6 @@ class NewCircuit(QiskitCircuit[ChCircuitOption]):
         mcx_mode = self.circuit_option.mcx_mode
         num_layers = self.circuit_option.num_layers
         num_qubits = self.model_option.num_qubits
-        
         if mcx_mode == "constant":
             qc = QuantumCircuit(num_qubits + 2, num_qubits)
             anc_idx = [num_qubits, num_qubits + 1]
@@ -48,33 +39,39 @@ class NewCircuit(QiskitCircuit[ChCircuitOption]):
             qc = QuantumCircuit(2 * num_qubits, num_qubits)
             anc_idx = list(range(num_qubits, 2 * num_qubits))
 
-        num_bitstrs = len(self.model_option.Hd_bitstr_list)
-        Hd_params_lst = [[Parameter(f"Hd_params[{i}, {j}]") for j in range(num_bitstrs)] for i in range(num_layers)]
+        Ho_params = np.random.rand(num_layers)
+        # Hd_params = np.full(num_layers, np.pi/4)
+        Hd_params = np.random.rand(num_layers)
 
         for i in np.nonzero(self.model_option.feasible_state)[0]:
             qc.x(i)
 
         for layer in range(num_layers):
-            new_compnt(
+            print(f"===== Layer:{layer + 1} ======")
+            obj_compnt(qc, Ho_params[layer], self.model_option.obj_dct)
+            commute_compnt_for_mid(
                 qc,
-                Hd_params_lst[layer],
+                Hd_params[layer],
                 self.model_option.Hd_bitstr_list,
                 anc_idx,
                 mcx_mode,
+                num_qubits,
             )
-
+            
+        exit()
         qc.measure(range(num_qubits), range(num_qubits)[::-1])
         transpiled_qc = self.circuit_option.provider.pass_manager.run(qc)
+        print(transpiled_qc.draw())
         return transpiled_qc
 
-class NewSolver(Solver):
+class ChocoSolverMid(Solver):
     def __init__(
         self,
         *,
         prb_model: LcboModel,
         optimizer: Optimizer,
         provider: Provider,
-        num_layers: int = 1,
+        num_layers: int,
         shots: int = 1024,
         mcx_mode: str = "linear",
     ):
@@ -89,7 +86,7 @@ class NewSolver(Solver):
     @property
     def circuit(self):
         if self._circuit is None:
-            self._circuit = NewCircuit(self.circuit_option, self.mode_option)
+            self._circuit = ChocoCircuitMid(self.circuit_option, self.mode_option)
         return self._circuit
 
 

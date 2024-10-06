@@ -11,10 +11,10 @@ from choco.utils import iprint
 
 from .circuit import QiskitCircuit
 from .provider import Provider
-from .circuit.circuit_components import obj_compnt, new_compnt
+from .circuit.circuit_components import obj_compnt, new_x_compnt
 
 
-class NewCircuit(QiskitCircuit[ChCircuitOption]):
+class NewXCircuit(QiskitCircuit[ChCircuitOption]):
     def __init__(self, circuit_option: ChCircuitOption, model_option: ModelOption):
         super().__init__(circuit_option, model_option)
         # self.model_option.Hd_bitstr_list = list(reversed(self.model_option.Hd_bitstr_list))
@@ -28,7 +28,7 @@ class NewCircuit(QiskitCircuit[ChCircuitOption]):
         self.inference_circuit = self.create_circuit()
 
     def get_num_params(self):
-        return self.circuit_option.num_layers * len(self.model_option.Hd_bitstr_list)
+        return self.circuit_option.num_layers * 1
     
     def inference(self, params):
         final_qc = self.inference_circuit.assign_parameters(params)
@@ -42,32 +42,30 @@ class NewCircuit(QiskitCircuit[ChCircuitOption]):
         num_qubits = self.model_option.num_qubits
         
         if mcx_mode == "constant":
-            qc = QuantumCircuit(num_qubits + 2, num_qubits)
-            anc_idx = [num_qubits, num_qubits + 1]
+            qc = QuantumCircuit(num_qubits, num_qubits)
+            # anc_idx = [num_qubits, num_qubits + 1]
         elif mcx_mode == "linear":
-            qc = QuantumCircuit(2 * num_qubits, num_qubits)
-            anc_idx = list(range(num_qubits, 2 * num_qubits))
+            qc = QuantumCircuit(num_qubits, num_qubits)
+            # anc_idx = list(range(num_qubits, 2 * num_qubits))
 
         num_bitstrs = len(self.model_option.Hd_bitstr_list)
-        Hd_params_lst = [[Parameter(f"Hd_params[{i}, {j}]") for j in range(num_bitstrs)] for i in range(num_layers)]
+        Hd_params_lst = [[Parameter(f"Hd_params[{i}, {j}]") for j in range(1)] for i in range(num_layers)]
 
         for i in np.nonzero(self.model_option.feasible_state)[0]:
             qc.x(i)
 
         for layer in range(num_layers):
-            new_compnt(
+            new_x_compnt(
                 qc,
                 Hd_params_lst[layer],
                 self.model_option.Hd_bitstr_list,
-                anc_idx,
-                mcx_mode,
             )
 
         qc.measure(range(num_qubits), range(num_qubits)[::-1])
         transpiled_qc = self.circuit_option.provider.pass_manager.run(qc)
         return transpiled_qc
 
-class NewSolver(Solver):
+class NewXSolver(Solver):
     def __init__(
         self,
         *,
@@ -89,7 +87,7 @@ class NewSolver(Solver):
     @property
     def circuit(self):
         if self._circuit is None:
-            self._circuit = NewCircuit(self.circuit_option, self.mode_option)
+            self._circuit = NewXCircuit(self.circuit_option, self.mode_option)
         return self._circuit
 
 

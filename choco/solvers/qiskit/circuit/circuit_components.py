@@ -3,6 +3,7 @@ from itertools import combinations
 from qiskit import QuantumCircuit
 from typing import Dict
 from .hdi_decompose import driver_component
+from choco.utils.linear_system import get_circ_unitary
 
 
 def obj_compnt(qc: QuantumCircuit, param, obj_dct: Dict):
@@ -19,6 +20,26 @@ def obj_compnt(qc: QuantumCircuit, param, obj_dct: Dict):
                     for i in range(len(combo) - 2, -1, -1):
                         qc.cx(vars_tuple[combo[i]], vars_tuple[combo[i + 1]])
 
+def commute_compnt_for_mid(qc: QuantumCircuit, param, Hd_bitstr_list, anc_idx, mcx_mode, num_qubits):
+    from qiskit_aer import AerSimulator
+    from qiskit.transpiler.preset_passmanagers import generate_preset_pass_manager
+    from qiskit_ibm_runtime import SamplerV2 as Sampler
+    sampler = Sampler(mode=AerSimulator())
+
+    CORE_BASIS_GATES = ["measure", "cx", "id", "rz", "sx", "x"]
+    generate_preset_pass_manager(optimization_level=2, basis_gates=CORE_BASIS_GATES,)
+
+    for hdi_vct in Hd_bitstr_list:
+        nonzero_indices = np.nonzero(hdi_vct)[0].tolist()
+        hdi_bitstr = [0 if x == -1 else 1 for x in hdi_vct if x != 0]
+        driver_component(qc, nonzero_indices, anc_idx, hdi_bitstr, param, mcx_mode)
+        qc_cp:QuantumCircuit = qc.copy()
+        qc_cp.measure(range(num_qubits), range(num_qubits)[::-1])
+        job = sampler.run([qc_cp], shots=10000000)
+        result = job.result()
+        pub_result = result[0]
+        counts = pub_result.data.c.get_counts()
+        print(len(counts))
 
 def commute_compnt(qc: QuantumCircuit, param, Hd_bitstr_list, anc_idx, mcx_mode):
     for hdi_vct in Hd_bitstr_list:
@@ -26,11 +47,23 @@ def commute_compnt(qc: QuantumCircuit, param, Hd_bitstr_list, anc_idx, mcx_mode)
         hdi_bitstr = [0 if x == -1 else 1 for x in hdi_vct if x != 0]
         driver_component(qc, nonzero_indices, anc_idx, hdi_bitstr, param, mcx_mode)
 
-def cqa_compnt(qc: QuantumCircuit, params, Hd_bitstr_list, anc_idx, mcx_mode):
+def new_compnt(qc: QuantumCircuit, params, Hd_bitstr_list, anc_idx, mcx_mode):
     for idx, hdi_vct in enumerate(Hd_bitstr_list):
         nonzero_indices = np.nonzero(hdi_vct)[0].tolist()
         hdi_bitstr = [0 if x == -1 else 1 for x in hdi_vct if x != 0]
         driver_component(qc, nonzero_indices, anc_idx, hdi_bitstr, params[idx], mcx_mode)
+
+def new_x_compnt(qc: QuantumCircuit, params, Hd_bitstr_list):
+    for idx, hdi_vct in enumerate(Hd_bitstr_list):
+        nonzero_indices = np.nonzero(hdi_vct)[0].tolist()
+        qc.barrier()
+        for bit in nonzero_indices:
+            qc.rx(params[idx], bit)
+        break
+    print(qc.draw())
+        # exit()
+        # hdi_bitstr = [0 if x == -1 else 1 for x in hdi_vct if x != 0]
+        # driver_component(qc, nonzero_indices, anc_idx, hdi_bitstr, params[idx], mcx_mode)
 
 def cyclic_compnt(qc: QuantumCircuit, param, constr_cyclic):
     for constr in constr_cyclic:
