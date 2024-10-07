@@ -89,7 +89,7 @@ class NewSolver(Solver):
     @property
     def circuit(self):
         if self._circuit is None:
-            self._circuit = NewCircuit(self.circuit_option, self.mode_option)
+            self._circuit = NewCircuit(self.circuit_option, self.model_option)
         return self._circuit
 
 

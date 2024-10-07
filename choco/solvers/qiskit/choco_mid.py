@@ -16,17 +16,13 @@ from .circuit.circuit_components import obj_compnt, commute_compnt_for_mid
 class ChocoCircuitMid(QiskitCircuit[ChCircuitOption]):
     def __init__(self, circuit_option: ChCircuitOption, model_option: ModelOption):
         super().__init__(circuit_option, model_option)
-        self.inference_circuit = self.create_circuit()
-        print(self.model_option.Hd_bitstr_list)
+        self.basis_list = self.create_circuit()
 
     def get_num_params(self):
         return self.circuit_option.num_layers * 2
     
     def inference(self, params):
-        final_qc = self.inference_circuit.assign_parameters(params)
-        counts = self.circuit_option.provider.get_counts(final_qc, shots=self.circuit_option.shots)
-        collapse_state, probs = self.process_counts(counts)
-        return collapse_state, probs
+        return super().inference(params)
 
     def create_circuit(self) -> QuantumCircuit:
         mcx_mode = self.circuit_option.mcx_mode
@@ -40,29 +36,31 @@ class ChocoCircuitMid(QiskitCircuit[ChCircuitOption]):
             anc_idx = list(range(num_qubits, 2 * num_qubits))
 
         Ho_params = np.random.rand(num_layers)
-        # Hd_params = np.full(num_layers, np.pi/4)
-        Hd_params = np.random.rand(num_layers)
+        Hd_params = np.full(num_layers, np.pi/4)
+        # Hd_params = np.random.rand(num_layers)
 
         for i in np.nonzero(self.model_option.feasible_state)[0]:
             qc.x(i)
-
+        num_basis_list = []
         for layer in range(num_layers):
             print(f"===== Layer:{layer + 1} ======")
             obj_compnt(qc, Ho_params[layer], self.model_option.obj_dct)
-            commute_compnt_for_mid(
+            # order=[7, 0, 6,8,5,4,3,2,1]
+            # new_order = sorted_list = [self.model_option.Hd_bitstr_list[i] for i in order]
+            basis_list = commute_compnt_for_mid(
                 qc,
                 Hd_params[layer],
+                # new_order,
                 self.model_option.Hd_bitstr_list,
                 anc_idx,
                 mcx_mode,
                 num_qubits,
+                self.circuit_option.shots
             )
-            
-        exit()
-        qc.measure(range(num_qubits), range(num_qubits)[::-1])
-        transpiled_qc = self.circuit_option.provider.pass_manager.run(qc)
-        print(transpiled_qc.draw())
-        return transpiled_qc
+            num_basis_list.append(basis_list)
+        print(num_basis_list)
+        return num_basis_list
+
 
 class ChocoSolverMid(Solver):
     def __init__(
@@ -86,7 +84,8 @@ class ChocoSolverMid(Solver):
     @property
     def circuit(self):
         if self._circuit is None:
-            self._circuit = ChocoCircuitMid(self.circuit_option, self.mode_option)
+            self._circuit = ChocoCircuitMid(self.circuit_option, self.model_option)
         return self._circuit
 
-
+    def search(self):
+        return self.circuit.basis_list

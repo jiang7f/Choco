@@ -8,30 +8,34 @@ from choco.solvers.qiskit import (
     AerGpuProvider, AerProvider, FakeBrisbaneProvider, FakeKyivProvider, FakeTorinoProvider, DdsimProvider,
 )
 
-num_case = 1
-a, b = generate_flp(num_case,[(3, 3)], 1, 100)
+num_case = 5
+a, b = generate_flp(num_case,[(1, 2), (2, 3), (3, 3), (3, 4)], 1, 100)
 # print(a[0][0])
 # (1, [(2, 1), (3, 2), (3, 3), (4, 3), (4, 4)], 1, 20)
 
 best_lst = []
 arg_lst = []
 
-for i in range(num_case):
-    opt = CobylaOptimizer(max_iter=200)
-    aer = DdsimProvider()
-    solver = ChocoSolverMid(
-        prb_model=a[0][i],  # 问题模型
-        optimizer=opt,  # 优化器
-        provider=aer,  # 提供器（backend + 配对 pass_mannager ）
-        num_layers=10,
-        shots=1024
-        # mcx_mode="linear",
-    )
+import os
+import csv
+script_path = os.path.abspath(__file__)
+new_path = script_path.replace('experiment', 'data')[:-3]
 
-    result = solver.solve()
-    u, v, w, x = solver.evaluation()
-    print(f"{i}: {u}, {v}, {w}, {x}")
-    best_lst.append(u)
-    arg_lst.append(w)
+headers = ["pkid", "pid", "basis_num"]
+with open(f'{new_path}.csv', mode='w', newline='') as file:
+    writer = csv.writer(file)
+    writer.writerow(headers)  # Write headers once
+    for prb in range(4):
+        for i in range(num_case):
+            opt = CobylaOptimizer(max_iter=200)
+            aer = DdsimProvider()
+            solver = ChocoSolverMid(
+                prb_model=a[prb][i],  # 问题模型
+                optimizer=opt,  # 优化器
+                provider=aer,  # 提供器（backend + 配对 pass_mannager ）
+                num_layers=15,
+                shots=100000
+            )
+            result = solver.search()
+            writer.writerow([prb, i, result])
 
-print(sum(best_lst) / num_case, sum(arg_lst) / num_case)

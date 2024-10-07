@@ -11,7 +11,7 @@ from .data_analyzer import DataAnalyzer
 
 class Solver(ABC):
     def __init__(self, prb_model: LcboModel, optimizer: Optimizer):
-        self.mode_option: ModelOption = prb_model.to_model_option()
+        self.model_option: ModelOption = prb_model.to_model_option()
         self.optimizer: Optimizer = optimizer
         self.circuit_option: CircuitOption = None
 
@@ -33,7 +33,7 @@ class Solver(ABC):
         pass
 
     def solve(self):
-        self.optimizer.optimizer_option.obj_dir = self.mode_option.obj_dir
+        self.optimizer.optimizer_option.obj_dir = self.model_option.obj_dir
         self.optimizer.optimizer_option.cost_func = self.circuit.get_circuit_cost_func()
         self.optimizer.optimizer_option.num_params = self.circuit.get_num_params()
         best_params, self.iter_count = self.optimizer.minimize()
@@ -44,13 +44,13 @@ class Solver(ABC):
         """在调用过solve之后使用"""
         assert self.collapse_state_lst is not None
 
-        mode_option = self.mode_option
+        model_option = self.model_option
         data_analyzer = DataAnalyzer(
             collapse_state_lst = self.collapse_state_lst, 
             probs_lst = self.probs_lst, 
-            obj_func = mode_option.obj_func, 
-            best_cost = mode_option.best_cost,
-            lin_constr_mtx = mode_option.lin_constr_mtx
+            obj_func = model_option.obj_func, 
+            best_cost = model_option.best_cost,
+            lin_constr_mtx = model_option.lin_constr_mtx
         )
         data_metrics_lst = data_analyzer.summary()
         # 把 iteration_count 加到 指标 结尾，构成完整评估

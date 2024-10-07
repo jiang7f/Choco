@@ -21,6 +21,7 @@ class CobylaOptimizer(Optimizer):
         cost_func_trans = self.obj_dir_trans(obj_dir, cost_func)
         iteration_count = 0
         params = self._initialize_params(optimizer_option.num_params)
+        print(params)
 
         def callback(params):
             nonlocal iteration_count

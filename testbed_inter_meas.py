@@ -4,12 +4,12 @@ from choco.problems.facility_location_problem import generate_flp
 from choco.model import LinearConstrainedBinaryOptimization as LcboModel
 from choco.solvers.optimizers import CobylaOptimizer, AdamOptimizer
 from choco.solvers.qiskit import (
-    ChocoSolver, CyclicSolver, HeaSolver, PenaltySolver, NewSolver, NewXSolver,
+    ChocoSolver, ChocoInterMeasSolver, CyclicSolver, HeaSolver, PenaltySolver, NewSolver, NewXSolver,
     AerGpuProvider, AerProvider, FakeBrisbaneProvider, FakeKyivProvider, FakeTorinoProvider, DdsimProvider,
 )
 
-num_case = 100
-a, b = generate_flp(num_case,[(5, 5)], 1, 100)
+num_case = 10
+a, b = generate_flp(num_case,[(1, 1)], 1, 100)
 # print(a[0][0])
 # (1, [(2, 1), (3, 2), (3, 3), (4, 3), (4, 4)], 1, 20)
 
@@ -18,8 +18,8 @@ arg_lst = []
 
 for i in range(num_case):
     opt = CobylaOptimizer(max_iter=200)
-    aer = DdsimProvider()
-    solver = NewSolver(
+    aer = FakeTorinoProvider()
+    solver = ChocoInterMeasSolver(
         prb_model=a[0][i],  # 问题模型
         optimizer=opt,  # 优化器
         provider=aer,  # 提供器（backend + 配对 pass_mannager ）
