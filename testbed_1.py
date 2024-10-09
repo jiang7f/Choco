@@ -12,7 +12,10 @@ m = LcboModel()
 x = m.addVars(5, name="x")
 m.setObjective(x[0].to_expression(), "max")
 m.addConstr(x[0] + x[1] == 1)
-m.addConstr(2 * x[3] == 0)
+print(2 * x[3] <= 2)
+print(2 * x[3] <= 0)
+exit()
+m.addConstr(2 * x[3] <= 2)
 
 
 m.set_penalty_lambda(0)

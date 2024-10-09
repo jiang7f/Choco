@@ -8,7 +8,7 @@ from choco.solvers.qiskit import (
     AerGpuProvider, AerProvider, FakeBrisbaneProvider, FakeKyivProvider, FakeTorinoProvider, DdsimProvider,
 )
 
-num_case = 100
+num_case = 1
 a, b = generate_flp(num_case,[(2, 2)], 1, 100)
 # print(a[0][0])
 # (1, [(2, 1), (3, 2), (3, 3), (4, 3), (4, 4)], 1, 20)

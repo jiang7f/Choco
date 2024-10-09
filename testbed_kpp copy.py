@@ -1,6 +1,6 @@
 should_print = True
 
-from choco.problems.capital_budgeting_problem import CapitalBudgetingProblem
+from choco.problems.k_partition_problem import KPartitionProblem, generate_kpp
 from choco.model import LinearConstrainedBinaryOptimization as LcboModel
 from choco.solvers.optimizers import CobylaOptimizer, AdamOptimizer
 from choco.solvers.qiskit import (
@@ -8,18 +8,16 @@ from choco.solvers.qiskit import (
     AerGpuProvider, AerProvider, FakeBrisbaneProvider, FakeKyivProvider, FakeTorinoProvider, DdsimProvider,
 )
 
-num_case = 100
-a = CapitalBudgetingProblem([3, 4, 5, 1], [5, 2, 3, 2], 8, [(3, 2)])
-[1.0, 1.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0]
-[1.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0]
+num_case = 1
+a, b = generate_kpp(num_case, [(4, 2, 3), (6, 3, 5), (8, 3, 7), (9, 3, 8)], 1, 20)
+best_lst = []
 best_lst = []
 arg_lst = []
-
 for i in range(num_case):
     opt = CobylaOptimizer(max_iter=200)
     aer = DdsimProvider()
     solver = ChocoSolver(
-        prb_model=a,  # 问题模型
+        prb_model=a[0][i],  # 问题模型
         optimizer=opt,  # 优化器
         provider=aer,  # 提供器（backend + 配对 pass_mannager ）
         num_layers=1,

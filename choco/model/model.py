@@ -1,8 +1,11 @@
 from __future__ import annotations
 from collections import defaultdict
-from typing import Dict, Tuple, Union, List, Set
+from typing import Dict, Tuple, Union, List, Set, Iterable
 from itertools import product
 from gurobipy import Model as GurobiModel, GRB, LinExpr
+from functools import reduce
+import operator
+
 coeff_type = int
 to_lin_constr: bool = True
 
@@ -14,6 +17,9 @@ def set_to_lin_constr(flag: bool):
     # 暂时默认只有线性约束       
     global to_lin_constr
     to_lin_constr = flag
+
+def fast_mul(terms: Iterable):
+    return reduce(operator.mul, terms)
 
 class Variable:
     # 推荐通过 Model 使用 Variable
@@ -32,7 +38,7 @@ class Variable:
             Variable.existing_variable_names_in_class.add(name)
         self.vtype = vtype
         self.name = name
-        self.x = None
+        # self.x = None
 
     def to_expression(self) -> Expression:
         """将 Variable 转为 Expression, 处理加减乘除/生成约束"""

@@ -1,6 +1,6 @@
 should_print = False
 
-from choco.problems.facility_location_problem import generate_flp
+from choco.problems.k_partition_problem import generate_kpp
 from choco.model import LinearConstrainedBinaryOptimization as LcboModel
 from choco.solvers.optimizers import CobylaOptimizer, AdamOptimizer
 from choco.solvers.qiskit import (
@@ -9,29 +9,32 @@ from choco.solvers.qiskit import (
 )
 
 num_case = 100
-prbs = [(1, 2), (2, 3)]
-a, b = generate_flp(num_case, prbs, 1, 100)
+a, b = generate_kpp(num_case, [(4, 2, 3), (6, 3, 5)], 1, 20)
 # print(a[0][0])
 # (1, [(2, 1), (3, 2), (3, 3), (4, 3), (4, 4)], 1, 20)
 
-best_lst = []
-in_cnst_list = []
-arg_lst = []
-iter_lst = []
+
 
 import os
 import csv
 script_path = os.path.abspath(__file__)
 new_path = script_path.replace('experiment', 'data')[:-3]
 headers = ["pkid", "solverid", "success", "incnstr", "arg", "iter"]
-with open(f'{new_path}.csv', mode='w', newline='') as file:
+
+file_name = f'{new_path}.csv'
+
+with open(file_name, mode='w', newline='') as file:
     writer = csv.writer(file)
     writer.writerow(headers)  # Write headers once
 
 
-solvers = [ChocoInterMeasSolver, ChocoSolver]
-for prb in range(len(prbs)):
+solvers = [ChocoSolver, ChocoInterMeasSolver]
+for prb in range(len(a)):
     for solver_id in range(len(solvers)):
+        best_lst = []
+        in_cnst_list = []
+        arg_lst = []
+        iter_lst = []
         for i in range(num_case):
             opt = CobylaOptimizer(max_iter=200)
             aer = SimulatorProvider()
@@ -51,7 +54,7 @@ for prb in range(len(prbs)):
             in_cnst_list.append(v)
             arg_lst.append(w)
             iter_lst.append(x)
-        with open(f'{new_path}.csv', mode='a', newline='') as file:
+        with open(file_name, mode='a', newline='') as file:
             writer = csv.writer(file)
             writer.writerow([prb, solver_id, sum(best_lst) / num_case, sum(in_cnst_list) / num_case, sum(arg_lst) / num_case, sum(iter_lst) / num_case])
         print(sum(best_lst) / num_case, sum(in_cnst_list) / num_case, sum(arg_lst) / num_case, sum(iter_lst) / num_case)

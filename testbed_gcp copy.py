@@ -1,6 +1,6 @@
 should_print = True
 
-from choco.problems.capital_budgeting_problem import CapitalBudgetingProblem
+from choco.problems.graph_coloring_problem import GraphColoringProblem, generate_gcp
 from choco.model import LinearConstrainedBinaryOptimization as LcboModel
 from choco.solvers.optimizers import CobylaOptimizer, AdamOptimizer
 from choco.solvers.qiskit import (
@@ -9,17 +9,14 @@ from choco.solvers.qiskit import (
 )
 
 num_case = 100
-a = CapitalBudgetingProblem([3, 4, 5, 1], [5, 2, 3, 2], 8, [(3, 2)])
-[1.0, 1.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0]
-[1.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0]
+a, b = generate_gcp(num_case, [(3, 1), (3, 2), (4, 2), (4, 3)])
 best_lst = []
 arg_lst = []
-
 for i in range(num_case):
     opt = CobylaOptimizer(max_iter=200)
     aer = DdsimProvider()
     solver = ChocoSolver(
-        prb_model=a,  # 问题模型
+        prb_model=a[0][i],  # 问题模型
         optimizer=opt,  # 优化器
         provider=aer,  # 提供器（backend + 配对 pass_mannager ）
         num_layers=1,

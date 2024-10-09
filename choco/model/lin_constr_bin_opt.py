@@ -13,9 +13,10 @@ class LinearConstrainedBinaryOptimization(Model):
         """ a linear constrainted binary optimization problem. """
         set_print_form()
         super().__init__()
-        self.slack_groups = 1
+        self.slack_groups = 0
         self.obj_dir = None
         self.penalty_lambda = 0x7FFF # 大数
+        self.additional_slack_constraints: List[Tuple[Constraint, Dict[Variable]]] = [] # 约束和松弛变量
         
 
         self._variables_idx = None
@@ -158,6 +159,7 @@ class LinearConstrainedBinaryOptimization(Model):
             return self.variables_idx[variable.name]
         except ValueError:
             raise ValueError(f"Variable {variable} does not exist in the model.")
+        
 
     def addConstr(self, constraint: Constraint):
         """自动为不等式约束添加松弛变量，转换为等式约束"""
@@ -183,9 +185,9 @@ class LinearConstrainedBinaryOptimization(Model):
                 constraint.expr += sum(slack_vars.values())
 
             constraint.sense = '=='
+            self.additional_slack_constraints.append((constraint, slack_vars))
 
         self.constraints.append(constraint)
-    
 
     def get_feasible_solution(self):
         # 如果子类有快速 generate 可行解方案，override 是推荐的
@@ -194,6 +196,27 @@ class LinearConstrainedBinaryOptimization(Model):
             if all([np.dot(bitstr,constr[:-1]) == constr[-1] for constr in self.lin_constr_mtx]):
                 return bitstr
         raise RuntimeError("找不到可行解")
+
+    def fill_feasible_solution(self, fsb_lst: List):
+        """ 根据变量的选择，自动填补松弛变量 """
+        for cnst, slack_vars in self.additional_slack_constraints:
+            rhs = cnst.rhs
+            expr = cnst.expr
+            
+            # 带入松弛后的等式约束，合并到右值
+            for vars_tuple, coeff in expr.terms.items():
+                # 用非松弛变量计算，含松弛变量的项跳过，这里默认松弛变量是单独的项
+                if any(var.name in [slack_var.name for slack_var in slack_vars.values()] for var in vars_tuple):
+                    continue
+                temp = 1
+                for var in vars_tuple:
+                    temp *= fsb_lst[self.var_idx(var)]
+                rhs -= temp * coeff
+            # 将松弛变量根据右值赋 1 以满足等式，等量个数就行（绝对值整数）
+            for key in range(np.abs(rhs).astype(int)):
+                fsb_lst[self.var_idx(slack_vars[key])] = 1
+
+
     
     @property
     def best_cost(self):
