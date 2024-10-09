@@ -72,4 +72,4 @@ def pray_for_buddha():
                                                   佛祖保佑             永无BUG
                                            .............................................
     """
-    print(msg)
+    iprint(msg)

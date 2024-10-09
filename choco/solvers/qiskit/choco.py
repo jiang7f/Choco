@@ -11,7 +11,7 @@ from choco.model import LinearConstrainedBinaryOptimization as LcboModel
 from .circuit import QiskitCircuit
 from .provider import Provider
 from .circuit.circuit_components import obj_compnt, commute_compnt
-
+from choco.utils.gadget import pray_for_buddha
 
 class ChocoCircuit(QiskitCircuit[ChCircuitOption]):
     def __init__(self, circuit_option: ChCircuitOption, model_option: ModelOption):
@@ -23,6 +23,7 @@ class ChocoCircuit(QiskitCircuit[ChCircuitOption]):
         return self.circuit_option.num_layers * 2
     
     def inference(self, params):
+        # pray_for_buddha()
         final_qc = self.inference_circuit.assign_parameters(params)
         counts = self.circuit_option.provider.get_counts(final_qc, shots=self.circuit_option.shots)
         collapse_state, probs = self.process_counts(counts)
@@ -56,7 +57,7 @@ class ChocoCircuit(QiskitCircuit[ChCircuitOption]):
             )
 
         qc.measure(range(num_qubits), range(num_qubits)[::-1])
-        transpiled_qc = self.circuit_option.provider.pass_manager.run(qc)
+        transpiled_qc = self.circuit_option.provider.transpile(qc)
         return transpiled_qc
 
 class ChocoSolver(Solver):

@@ -7,7 +7,7 @@ from choco.solvers.optimizers import Optimizer
 from choco.solvers.options import CircuitOption, OptimizerOption, ModelOption
 from choco.solvers.options.circuit_option import ChCircuitOption
 from choco.model import LinearConstrainedBinaryOptimization as LcboModel
-from choco.utils.gadget import pray_for_buddha
+from choco.utils.gadget import pray_for_buddha, iprint
 
 from .circuit import QiskitCircuit
 from .provider import Provider
@@ -53,14 +53,16 @@ class ChocoInterMeasCircuit(QiskitCircuit[ChCircuitOption]):
             hdi_bitstr = [0 if x == -1 else 1 for x in hdi_vct if x != 0]
             driver_component(qc_temp, nonzero_indices, anc_idx, hdi_bitstr, Hd_param, mcx_mode)
             qc_temp.measure(range(num_qubits), range(num_qubits)[::-1])
-            transpiled_qc = self.circuit_option.provider.pass_manager.run(qc_temp)
+            transpiled_qc = self.circuit_option.provider.transpile(qc_temp)
             self.hdi_qc_list.append(transpiled_qc)
 
     
     def excute_inter_meas_circuit(self, params) -> QuantumCircuit:
         num_layers = self.circuit_option.num_layers
-    
+
         def run_and_pick(dict:dict, hdi_qc: QuantumCircuit, param):
+            iprint("--------------")
+            iprint(f'input dict: {dict}')
             dicts = []
             total_count = sum(dict.values())
             for key, value in dict.items():
@@ -68,25 +70,27 @@ class ChocoInterMeasCircuit(QiskitCircuit[ChCircuitOption]):
                 for idx, key_i in enumerate(key):
                     if key_i == '1':
                         qc_temp.x(idx)
-                qc_temp = self.circuit_option.provider.pass_manager.run(qc_temp)
+                qc_temp = self.circuit_option.provider.transpile(qc_temp)
                 qc_add = hdi_qc.assign_parameters([param])
                 qc_temp.compose(qc_add, inplace=True)
+                iprint(f'this hdi depth: {qc_temp.depth()}')
                 count = self.circuit_option.provider.get_counts(qc_temp, shots=self.circuit_option.shots * value // total_count)
-                dicts.append(count)            
+                dicts.append(count)
 
+            iprint(f'evolve: {dicts}')
             merged_dict = {}
             for d in dicts:
                 for key, value in d.items():
                     if all([np.dot([int(char) for char in key], constr[:-1]) == constr[-1] for constr in self.model_option.lin_constr_mtx]):
                         merged_dict[key] = merged_dict.get(key, 0) + value
-            print(f'merged_dict: {merged_dict}')
+            iprint(f'feasible counts: {merged_dict}')
             return merged_dict
 
 
         register_counts = {''.join(map(str, self.model_option.feasible_state.astype(int))): 1}
         for layer in range(num_layers):
             # obj_compnt(qc, Ho_params[layer], self.model_option.obj_dct)
-            for hdi_qc in self.hdi_qc_list:
+            for hdi_qc in self.hdi_qc_list[::-1]:
                 register_counts = run_and_pick(register_counts, hdi_qc, params[layer])
 
         return register_counts

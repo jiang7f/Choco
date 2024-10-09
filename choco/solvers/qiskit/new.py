@@ -64,7 +64,7 @@ class NewCircuit(QiskitCircuit[ChCircuitOption]):
             )
 
         qc.measure(range(num_qubits), range(num_qubits)[::-1])
-        transpiled_qc = self.circuit_option.provider.pass_manager.run(qc)
+        transpiled_qc = self.circuit_option.provider.transpile(qc)
         return transpiled_qc
 
 class NewSolver(Solver):

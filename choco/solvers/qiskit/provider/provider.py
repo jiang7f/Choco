@@ -20,6 +20,9 @@ class Provider(ABC):
     def get_counts(self, qc: QuantumCircuit, shots: int) -> Dict:
         pass
 
+    def transpile(self, qc: QuantumCircuit):
+        return self.pass_manager.run(qc)
+
 
 class CustomProvider(Provider):
     """没有预设的Provider 可自定义传入三参"""

@@ -4,14 +4,13 @@ from choco.problems.facility_location_problem import generate_flp
 from choco.model import LinearConstrainedBinaryOptimization as LcboModel
 from choco.solvers.optimizers import CobylaOptimizer, AdamOptimizer
 from choco.solvers.qiskit import (
-    ChocoSolver, ChocoSolverMid, CyclicSolver, HeaSolver, PenaltySolver, NewSolver, NewXSolver,
+    ChocoSolver, ChocoSolverSearch, CyclicSolver, HeaSolver, PenaltySolver, NewSolver, NewXSolver,
     AerGpuProvider, AerProvider, FakeBrisbaneProvider, FakeKyivProvider, FakeTorinoProvider, DdsimProvider,
 )
 
-num_case = 5
-a, b = generate_flp(num_case,[(1, 2), (2, 3), (3, 3), (3, 4)], 1, 100)
-# print(a[0][0])
-# (1, [(2, 1), (3, 2), (3, 3), (4, 3), (4, 4)], 1, 20)
+num_case = 1
+prbs = [(1, 2), (2, 3), (3, 3), (3, 4)]
+a, b = generate_flp(num_case, prbs, 1, 100)
 
 best_lst = []
 arg_lst = []
@@ -21,21 +20,22 @@ import csv
 script_path = os.path.abspath(__file__)
 new_path = script_path.replace('experiment', 'data')[:-3]
 
-headers = ["pkid", "pid", "basis_num"]
-with open(f'{new_path}.csv', mode='w', newline='') as file:
+headers = ["pkid", "type", "basis_num"]
+with open(f'{new_path}_test.csv', mode='w', newline='') as file:
     writer = csv.writer(file)
     writer.writerow(headers)  # Write headers once
-    for prb in range(4):
+    for prb in range(len(prbs)):
         for i in range(num_case):
             opt = CobylaOptimizer(max_iter=200)
             aer = DdsimProvider()
-            solver = ChocoSolverMid(
+            solver = ChocoSolverSearch(
                 prb_model=a[prb][i],  # 问题模型
                 optimizer=opt,  # 优化器
                 provider=aer,  # 提供器（backend + 配对 pass_mannager ）
-                num_layers=15,
+                num_layers=10,
                 shots=100000
             )
-            result = solver.search()
-            writer.writerow([prb, i, result])
+            result, depth = solver.search()
+            writer.writerow([prb, 'basis_num', result])
+            writer.writerow([prb, 'depth', depth])
 

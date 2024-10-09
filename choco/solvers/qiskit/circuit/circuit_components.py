@@ -21,8 +21,9 @@ def obj_compnt(qc: QuantumCircuit, param, obj_dct: Dict):
                         qc.cx(vars_tuple[combo[i]], vars_tuple[combo[i + 1]])
 
 
-def commute_compnt_for_mid(qc: QuantumCircuit, param, Hd_bitstr_list, anc_idx, mcx_mode, num_qubits, shots):
+def commute_search_evolution_space(qc: QuantumCircuit, param, Hd_bitstr_list, anc_idx, mcx_mode, num_qubits, shots):
     num_basis_list = []
+    depth_list = []
     from qiskit_aer import AerSimulator
     from qiskit.transpiler.preset_passmanagers import generate_preset_pass_manager
     from qiskit_ibm_runtime import SamplerV2 as Sampler
@@ -38,13 +39,14 @@ def commute_compnt_for_mid(qc: QuantumCircuit, param, Hd_bitstr_list, anc_idx, m
 
         sampler = Sampler(mode=AerSimulator())
         qc_cp.measure(range(num_qubits), range(num_qubits)[::-1])
+
         job = sampler.run([qc_cp], shots=shots)
         result = job.result()
         pub_result = result[0]
         counts = pub_result.data.c.get_counts()
         num_basis_list.append(len(counts))
-        print(len(counts))
-    return num_basis_list
+        depth_list.append(qc_cp.depth())
+    return num_basis_list, depth_list
 
 
         # statevector = Statevector.from_instruction(qc_cp)

@@ -10,19 +10,20 @@ from choco.model import LinearConstrainedBinaryOptimization as LcboModel
 
 from .circuit import QiskitCircuit
 from .provider import Provider
-from .circuit.circuit_components import obj_compnt, commute_compnt_for_mid
+from .circuit.circuit_components import obj_compnt, commute_search_evolution_space
 
 
-class ChocoCircuitMid(QiskitCircuit[ChCircuitOption]):
+class ChocoCircuitSearch(QiskitCircuit[ChCircuitOption]):
     def __init__(self, circuit_option: ChCircuitOption, model_option: ModelOption):
         super().__init__(circuit_option, model_option)
-        self.basis_list = self.create_circuit()
+        self.result = self.create_circuit()
 
     def get_num_params(self):
         return self.circuit_option.num_layers * 2
     
     def inference(self, params):
-        return super().inference(params)
+        print("use func: search")
+        exit()
 
     def create_circuit(self) -> QuantumCircuit:
         mcx_mode = self.circuit_option.mcx_mode
@@ -42,12 +43,13 @@ class ChocoCircuitMid(QiskitCircuit[ChCircuitOption]):
         for i in np.nonzero(self.model_option.feasible_state)[0]:
             qc.x(i)
         num_basis_list = []
+        depth_lists = []
         for layer in range(num_layers):
             print(f"===== Layer:{layer + 1} ======")
             obj_compnt(qc, Ho_params[layer], self.model_option.obj_dct)
             # order=[7, 0, 6,8,5,4,3,2,1]
             # new_order = sorted_list = [self.model_option.Hd_bitstr_list[i] for i in order]
-            basis_list = commute_compnt_for_mid(
+            basis_list, depth_list = commute_search_evolution_space(
                 qc,
                 Hd_params[layer],
                 # new_order,
@@ -57,12 +59,12 @@ class ChocoCircuitMid(QiskitCircuit[ChCircuitOption]):
                 num_qubits,
                 self.circuit_option.shots
             )
-            num_basis_list.append(basis_list)
-        print(num_basis_list)
-        return num_basis_list
+            num_basis_list.extend(basis_list)
+            depth_lists.extend(depth_list)
+        return num_basis_list, depth_lists
 
 
-class ChocoSolverMid(Solver):
+class ChocoSolverSearch(Solver):
     def __init__(
         self,
         *,
@@ -84,8 +86,8 @@ class ChocoSolverMid(Solver):
     @property
     def circuit(self):
         if self._circuit is None:
-            self._circuit = ChocoCircuitMid(self.circuit_option, self.model_option)
+            self._circuit = ChocoCircuitSearch(self.circuit_option, self.model_option)
         return self._circuit
 
     def search(self):
-        return self.circuit.basis_list
+        return self.circuit.result
