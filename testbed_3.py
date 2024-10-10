@@ -22,7 +22,7 @@ for i in range(num_case):
         prb_model=a,  # 问题模型
         optimizer=opt,  # 优化器
         provider=aer,  # 提供器（backend + 配对 pass_mannager ）
-        num_layers=1,
+        num_layers=10,
         shots=1024
         # mcx_mode="linear",
     )
