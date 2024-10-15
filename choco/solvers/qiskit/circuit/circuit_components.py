@@ -20,6 +20,18 @@ def obj_compnt(qc: QuantumCircuit, param, obj_dct: Dict):
                     for i in range(len(combo) - 2, -1, -1):
                         qc.cx(vars_tuple[combo[i]], vars_tuple[combo[i + 1]])
 
+def penalty_decompose(qc:QuantumCircuit, penalty_m: list, param, num_qubits):
+    for penalty_mi in penalty_m:
+        coeff = np.sum(penalty_mi[:-1]) / 2 - penalty_mi[-1]
+        for i in range(num_qubits):
+            qc.rz(-2 * coeff * penalty_mi[i] * param, i)
+        for i in range(num_qubits - 1):
+            for j in range(i + 1, num_qubits):
+                if penalty_mi[i] != 0 and penalty_mi[j] != 0:
+                    qc.cx(i, j)
+                    coeff = penalty_mi[i] * penalty_mi[j]
+                    qc.rz(coeff * param, j)
+                    qc.cx(i, j)
 
 def commute_search_evolution_space(qc: QuantumCircuit, param, Hd_bitstr_list, anc_idx, mcx_mode, num_qubits, shots):
     num_basis_list = []
@@ -44,6 +56,7 @@ def commute_search_evolution_space(qc: QuantumCircuit, param, Hd_bitstr_list, an
         result = job.result()
         pub_result = result[0]
         counts = pub_result.data.c.get_counts()
+        print(counts)
         num_basis_list.append(len(counts))
         depth_list.append(qc_cp.depth())
     return num_basis_list, depth_list
@@ -63,7 +76,9 @@ def new_compnt(qc: QuantumCircuit, params, Hd_bitstr_list, anc_idx, mcx_mode):
     for idx, hdi_vct in enumerate(Hd_bitstr_list):
         nonzero_indices = np.nonzero(hdi_vct)[0].tolist()
         hdi_bitstr = [0 if x == -1 else 1 for x in hdi_vct if x != 0]
+        # qc.h(hdi_bitstr[0])
         driver_component(qc, nonzero_indices, anc_idx, hdi_bitstr, params[idx], mcx_mode)
+        # qc.h(hdi_bitstr[0])
 
 def new_x_compnt(qc: QuantumCircuit, params, Hd_bitstr_list):
     for idx, hdi_vct in enumerate(Hd_bitstr_list):
@@ -71,7 +86,7 @@ def new_x_compnt(qc: QuantumCircuit, params, Hd_bitstr_list):
         qc.barrier()
         for bit in nonzero_indices:
             qc.rx(params[idx], bit)
-        break
+        # break
     # print(qc.draw())
         # exit()
         # hdi_bitstr = [0 if x == -1 else 1 for x in hdi_vct if x != 0]

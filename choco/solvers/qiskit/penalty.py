@@ -9,7 +9,7 @@ from choco.model import LinearConstrainedBinaryOptimization as LcboModel
 
 from .circuit import QiskitCircuit
 from .provider import Provider
-from .circuit.circuit_components import obj_compnt, commute_compnt
+from .circuit.circuit_components import obj_compnt, commute_compnt, penalty_decompose
 
 
 class PenaltyCircuit(QiskitCircuit[CircuitOption]):
@@ -39,7 +39,7 @@ class PenaltyCircuit(QiskitCircuit[CircuitOption]):
 
         for layer in range(num_layers):
             obj_compnt(qc, Ho_params[layer], self.model_option.obj_dct)
-
+            penalty_decompose(qc, self.model_option.lin_constr_mtx, Ho_params[layer], num_qubits)
             for i in range(num_qubits):
                 qc.rx(Hd_params[layer], i)
 

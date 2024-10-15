@@ -10,8 +10,7 @@ from choco.solvers.qiskit import (
 
 num_case = 100
 a = CapitalBudgetingProblem([3, 4, 5, 1], [5, 2, 3, 2], 8, [(3, 2)])
-[1.0, 1.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0]
-[1.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0]
+
 best_lst = []
 arg_lst = []
 
@@ -22,7 +21,7 @@ for i in range(num_case):
         prb_model=a,  # 问题模型
         optimizer=opt,  # 优化器
         provider=aer,  # 提供器（backend + 配对 pass_mannager ）
-        num_layers=10,
+        num_layers=1,
         shots=1024
         # mcx_mode="linear",
     )

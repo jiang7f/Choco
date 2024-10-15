@@ -11,6 +11,8 @@ from choco.solvers.qiskit import (
 num_case = 1
 prbs = [(1, 2), (2, 3), (3, 3), (3, 4)]
 a, b = generate_flp(num_case, prbs, 1, 100)
+print(a[3][0].calculate_feasible_solution())
+exit()
 
 best_lst = []
 arg_lst = []

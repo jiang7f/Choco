@@ -16,6 +16,7 @@ from .circuit.circuit_components import obj_compnt, commute_search_evolution_spa
 class ChocoCircuitSearch(QiskitCircuit[ChCircuitOption]):
     def __init__(self, circuit_option: ChCircuitOption, model_option: ModelOption):
         super().__init__(circuit_option, model_option)
+        print(self.model_option.Hd_bitstr_list)
         self.result = self.create_circuit()
 
     def get_num_params(self):

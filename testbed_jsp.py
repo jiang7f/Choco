@@ -9,7 +9,7 @@ from choco.solvers.qiskit import (
 )
 
 num_case = 5
-a = JobSchedulingProblem([[5,2, 3], [2,3,4]], [1,1,1])
+a = JobSchedulingProblem(2, 3, [[3,11,1], [2,3,1]], [1,2,1])
 
 best_lst = []
 arg_lst = []

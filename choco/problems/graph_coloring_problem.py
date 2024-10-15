@@ -48,7 +48,7 @@ class GraphColoringProblem(LcboModel):
             for v in range(self.num_graphs):
                 model.addConstr(X[v, i] <= Y[i])
         
-        print("case is error, Orz, set 7f free")
+        print("out feasible case is error, Orz, set 7f free")
         return model
 
 import random

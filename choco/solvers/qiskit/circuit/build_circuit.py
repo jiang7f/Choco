@@ -1,8 +1,8 @@
 from abc import ABC, abstractmethod
 from typing import Dict, Tuple, List, Generic, TypeVar
 from qiskit import QuantumCircuit
+from ..circuit_analyzer import Metrics
 from ...options import CircuitOption, ModelOption
-
 
 T = TypeVar("T", bound=CircuitOption)
 
@@ -10,6 +10,8 @@ class QiskitCircuit(ABC, Generic[T]):
     def __init__(self, circuit_option: T, model_option: ModelOption):
         self.circuit_option: T = circuit_option
         self.model_option: ModelOption = model_option
+        self.inference_circuit: QuantumCircuit = None
+        self._analyzer = None
 
     def process_counts(self, counts: Dict) -> Tuple[List[List[int]], List[float]]:
         collapse_state = [[int(char) for char in state] for state in counts.keys()]
@@ -41,6 +43,19 @@ class QiskitCircuit(ABC, Generic[T]):
 
     def draw(self) -> None:
         pass
+    
+    @property
+    def analyzer(self) -> Metrics:
+        if self._analyzer is None:
+            self._analyzer = Metrics(self.inference_circuit, self.circuit_option.provider.backend)
+        return self._analyzer
+    
+    def analyze(self, metrics_list):
+        result = []
 
-    def analyze(self):
-        pass
+        for metric in metrics_list:
+            # 使用getattr来根据字符串'feedback'获取属性
+            feedback_value = getattr(self.analyzer, metric)
+            result.append(feedback_value)
+
+        return result

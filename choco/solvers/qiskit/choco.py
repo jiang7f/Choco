@@ -18,6 +18,7 @@ class ChocoCircuit(QiskitCircuit[ChCircuitOption]):
         super().__init__(circuit_option, model_option)
         self.inference_circuit = self.create_circuit()
         print(self.model_option.Hd_bitstr_list)
+        # exit()
 
     def get_num_params(self):
         return self.circuit_option.num_layers * 2

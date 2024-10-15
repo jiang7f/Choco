@@ -8,7 +8,7 @@ from choco.solvers.options import CircuitOption, OptimizerOption, ModelOption
 from choco.solvers.options.circuit_option import ChCircuitOption
 from choco.model import LinearConstrainedBinaryOptimization as LcboModel
 from choco.utils import iprint
-
+from choco.utils.linear_system import to_row_echelon_form
 from .circuit import QiskitCircuit
 from .provider import Provider
 from .circuit.circuit_components import obj_compnt, new_compnt
@@ -19,12 +19,15 @@ class NewCircuit(QiskitCircuit[ChCircuitOption]):
         super().__init__(circuit_option, model_option)
         # self.model_option.Hd_bitstr_list = list(reversed(self.model_option.Hd_bitstr_list))
         # self.model_option.feasible_state = [0, 0, 1, 0, 0]
-        first_row = self.model_option.Hd_bitstr_list[0, :]
-        self.model_option.Hd_bitstr_list = np.vstack([self.model_option.Hd_bitstr_list, first_row])
-
+        # first_row = self.model_option.Hd_bitstr_list[0, :]
+        # self.model_option.Hd_bitstr_list = np.vstack([self.model_option.Hd_bitstr_list, first_row])
+        # iprint(self.model_option.Hd_bitstr_list)
+        # if all(self.model_option.Hd_bitstr_list[1][:3] == self.model_option.Hd_bitstr_list[2][:3]):
+        # self.model_option.Hd_bitstr_list[0] = self.model_option.Hd_bitstr_list[0] + self.model_option.Hd_bitstr_list[4]
+        self.model_option.Hd_bitstr_list = to_row_echelon_form(self.model_option.Hd_bitstr_list)
         iprint(self.model_option.feasible_state)
         iprint(self.model_option.Hd_bitstr_list)
-
+        # exit()
         self.inference_circuit = self.create_circuit()
 
     def get_num_params(self):

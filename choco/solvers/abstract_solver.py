@@ -11,7 +11,12 @@ from .data_analyzer import DataAnalyzer
 
 class Solver(ABC):
     def __init__(self, prb_model: LcboModel, optimizer: Optimizer):
-        self.model_option: ModelOption = prb_model.to_model_option()
+        if isinstance(prb_model, LcboModel):
+            self.model_option = prb_model.to_model_option()
+        elif isinstance(prb_model, ModelOption):
+            self.model_option = prb_model
+        else:
+            raise TypeError(f"Expected LcboModel or ModelOption, got {type(prb_model)}")
         self.optimizer: Optimizer = optimizer
         self.circuit_option: CircuitOption = None
 
@@ -57,7 +62,8 @@ class Solver(ABC):
         self.evaluation_lst = data_metrics_lst + [self.iter_count]
         return self.evaluation_lst
         
-
+    def circuit_analyze(self, metrics_lst):
+        return self.circuit.analyze(metrics_lst)
     # def __hash__(self):
     #     # 使用一个元组的哈希值作为对象的哈希值
     #     return hash(self.name)

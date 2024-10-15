@@ -28,7 +28,7 @@ class NewXCircuit(QiskitCircuit[ChCircuitOption]):
         self.inference_circuit = self.create_circuit()
 
     def get_num_params(self):
-        return self.circuit_option.num_layers * 1
+        return self.model_option.num_qubits
     
     def inference(self, params):
         final_qc = self.inference_circuit.assign_parameters(params)
@@ -49,17 +49,20 @@ class NewXCircuit(QiskitCircuit[ChCircuitOption]):
             # anc_idx = list(range(num_qubits, 2 * num_qubits))
 
         num_bitstrs = len(self.model_option.Hd_bitstr_list)
-        Hd_params_lst = [[Parameter(f"Hd_params[{i}, {j}]") for j in range(1)] for i in range(num_layers)]
+        Hd_params_lst = [Parameter(f"Hd_params[{j}]") for j in range(num_qubits)]
 
-        for i in np.nonzero(self.model_option.feasible_state)[0]:
-            qc.x(i)
+        # for i in np.nonzero(self.model_option.feasible_state)[0]:
+        #     qc.x(i)
 
-        for layer in range(num_layers):
-            new_x_compnt(
-                qc,
-                Hd_params_lst[layer],
-                self.model_option.Hd_bitstr_list,
-            )
+        # for layer in range(num_layers):
+            # new_x_compnt(
+            #     qc,
+            #     Hd_params_lst[layer],
+            #     self.model_option.Hd_bitstr_list,
+            # )
+        print(len(Hd_params_lst))
+        for i in range(num_qubits):
+            qc.rx(Hd_params_lst[i], i)
 
         qc.measure(range(num_qubits), range(num_qubits)[::-1])
         transpiled_qc = self.circuit_option.provider.transpile(qc)

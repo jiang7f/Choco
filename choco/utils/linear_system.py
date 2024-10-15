@@ -25,6 +25,7 @@ def get_circ_unitary(quantum_circuit):
 def to_row_echelon_form(orimatrix: np.array):
     """Convert a matrix to row echelon form."""
     matrix = orimatrix.copy()
+    matrix.astype(float)
     if len(matrix) == 0:
         return matrix
     num_rows, num_cols = matrix.shape
@@ -52,6 +53,15 @@ def to_row_echelon_form(orimatrix: np.array):
                 lv = matrix[i, lead]
                 matrix[i] = matrix[i] - lv * matrix[r]
         lead += 1
+
+    # # Eliminate the elements above the pivots
+    # for r in range(num_rows - 1, -1, -1):  # Iterate from bottom to top
+    #     lead = np.nonzero(matrix[r])[0][0]  # Find the leading entry
+    #     for i in range(r - 1, -1, -1):  # Iterate upwards
+    #         if i >= 0 and lead < num_cols:  # Ensure within bounds
+    #             lv = matrix[i, lead]
+    #             matrix[i] = matrix[i] - lv * matrix[r]  # Eliminate above
+
     return matrix
 
 # 去除底部全0行
@@ -80,6 +90,8 @@ def find_free_variables(matrix):
 def find_basic_solution(matrix):
     matrix = to_row_echelon_form(matrix)
     matrix = remove_zero_rows(matrix)
+    print(matrix)
+    # exit()
     pivot_columns, free_variables = find_free_variables(matrix)
     # 计算基础解系
     basic_solutions = []

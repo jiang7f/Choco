@@ -195,7 +195,7 @@ class LinearConstrainedBinaryOptimization(Model):
             bitstr = [int(j) for j in list(bin(i)[2:].zfill(len(self.variables)))]
             if all([np.dot(bitstr,constr[:-1]) == constr[-1] for constr in self.lin_constr_mtx]):
                 return bitstr
-        raise RuntimeError("找不到可行解")
+        raise RuntimeError("找不到可行解") 
 
     def fill_feasible_solution(self, fsb_lst: List):
         """ 根据变量的选择，自动填补松弛变量 """
@@ -216,6 +216,16 @@ class LinearConstrainedBinaryOptimization(Model):
             for key in range(np.abs(rhs).astype(int)):
                 fsb_lst[self.var_idx(slack_vars[key])] = 1
 
+    def calculate_feasible_solution(self):
+        count = 0
+        from tqdm import tqdm
+        with tqdm(total=1 << len(self.variables)) as pbar:
+            for i in range(1 << len(self.variables)):
+                bitstr = [int(j) for j in list(bin(i)[2:].zfill(len(self.variables)))]
+                if all([np.dot(bitstr,constr[:-1]) == constr[-1] for constr in self.lin_constr_mtx]):
+                    count += 1
+                pbar.update(1)
+        return count
 
     
     @property
@@ -223,7 +233,7 @@ class LinearConstrainedBinaryOptimization(Model):
         if self._best_cost is None:
             best_cost, best_solution_case = self.optimize_with_gurobi()
             iprint(f'best_cost: {best_cost}')
-            iprint(f'best_solution_case: {best_solution_case}\n')
+            iprint(f'best_solution_case: {list(best_solution_case.values())}\n')
             self._best_cost = best_cost
         return self._best_cost
     
@@ -239,7 +249,6 @@ class LinearConstrainedBinaryOptimization(Model):
             obj_func = self.obj_func,
             best_cost=self.best_cost
         )
-        
         return model_option
 
     def optimize(self):

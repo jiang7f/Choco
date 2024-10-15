@@ -1,5 +1,5 @@
 from choco.model import LinearConstrainedBinaryOptimization as LcboModel
-from typing import Iterable
+from typing import Iterable, List, Tuple
 
 class FacilityLocationProblem(LcboModel):
     def __init__(self, num_demands: int, num_facilities: int, cost_service: Iterable[Iterable], cost_facilities: Iterable) -> None:
@@ -28,7 +28,7 @@ class FacilityLocationProblem(LcboModel):
 
 import random
 
-def generate_flp(num_problems_per_scale, scale_list, min_value=1, max_value=20):
+def generate_flp(num_problems_per_scale, scale_list, min_value=1, max_value=20) -> Tuple[List[List[FacilityLocationProblem]], List[List[Tuple]]]:
     def generate_random_flp(num_problems, idx_scale, num_demands, num_facilities, min_value=1, max_value=20):
         problems = []
         configs = []
